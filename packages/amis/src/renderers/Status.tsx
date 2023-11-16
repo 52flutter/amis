@@ -83,7 +83,7 @@ export interface StatusProps
 
 export class StatusField extends React.Component<StatusProps, object> {
   static defaultProps: Partial<StatusProps> = {
-    placeholder: '-',
+    placeholder: '--',
     map: {
       0: 'svg-fail',
       1: 'svg-success',

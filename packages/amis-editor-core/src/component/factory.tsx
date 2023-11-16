@@ -323,6 +323,7 @@ function currentDialogOnchagne(
           dialogMaxIndex,
           item.rhs?.__selectDialog
         );
+        // 改了下这里的返回值  第三次绑定同一个modal的时候会找不到模态 变为null
         replacedSchema = replaceDialogtoRef(
           newSchema,
           item.rhs?.__selectDialog,

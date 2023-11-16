@@ -187,7 +187,7 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
     controlsTheme: 'light',
     animation: 'fade',
     controls: ['dots', 'arrows'],
-    placeholder: '-',
+    placeholder: '--',
     multiple: {count: 1},
     alwaysShowArrow: false
   };

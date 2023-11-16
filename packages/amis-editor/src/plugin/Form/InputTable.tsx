@@ -89,8 +89,8 @@ export class TableControlPlugin extends BasePlugin {
     ],
     addable: false,
     footerAddBtn: {
-      label: '新增',
-      icon: 'fa fa-plus'
+      label: '新增'
+      // icon: 'fa fa-plus'
     },
     strictMode: true
   };
@@ -288,6 +288,32 @@ export class TableControlPlugin extends BasePlugin {
   panelTitle = '表格编辑';
 
   events: RendererPluginEvent[] = [
+    {
+      eventName: 'rowDbClick',
+      eventLabel: '行双击',
+      description: '双击整行事件',
+      dataSchema: [
+        {
+          type: 'object',
+          properties: {
+            data: {
+              type: 'object',
+              title: '数据',
+              properties: {
+                item: {
+                  type: 'object',
+                  title: '当前行记录'
+                },
+                index: {
+                  type: 'number',
+                  title: '当前行索引'
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
     {
       eventName: 'add',
       eventLabel: '添加行',
@@ -918,6 +944,28 @@ export class TableControlPlugin extends BasePlugin {
             variables: '${variables}',
             label: '删除条件',
             hiddenOn: 'data.__deleteType !== "conditionExpression"',
+            mode: 'horizontal',
+            required: true,
+            horizontal: {
+              leftFixed: 4 // 需要设置下leftFixed，否则这个字段的控件没有与其他字段的控件左对齐
+            },
+            size: 'lg'
+          })
+        ]
+      })
+    },
+    {
+      actionType: 'editItem',
+      actionLabel: '设置行编辑状态',
+      description: '设置某一行为编辑态',
+      innerArgs: ['index'],
+      schema: getArgsWrapper({
+        type: 'container',
+        body: [
+          getSchemaTpl('formulaControl', {
+            name: 'index',
+            variables: '${variables}',
+            label: '编辑行索引',
             mode: 'horizontal',
             required: true,
             horizontal: {

@@ -85,7 +85,7 @@ export interface JSONProps extends RendererProps, JsonSchema {
 
 export class JSONField extends React.Component<JSONProps, object> {
   static defaultProps: Partial<JSONProps> = {
-    placeholder: '-',
+    placeholder: '--',
     levelExpand: 1,
     source: '',
     displayDataTypes: false,

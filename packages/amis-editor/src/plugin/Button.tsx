@@ -233,10 +233,20 @@ export class ButtonPlugin extends BasePlugin {
                 ),
                 form: {
                   body: [
+                    getSchemaTpl('switch', {
+                      label: '气泡弹窗',
+                      mode: 'normal',
+                      name: 'popConfirm'
+                    }),
                     getSchemaTpl('textareaFormulaControl', {
                       label: '确认内容',
                       mode: 'normal',
                       name: 'confirmText'
+                    }),
+                    getSchemaTpl('textareaFormulaControl', {
+                      label: '标题内容',
+                      mode: 'normal',
+                      name: 'confirmTitle'
                     })
                   ]
                 }

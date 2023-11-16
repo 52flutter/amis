@@ -627,12 +627,17 @@ export class BaseCRUDPlugin extends BasePlugin {
           label: '占位内容'
         },
         getSchemaTpl('switch', {
+          name: 'showIndex',
+          label: tipedLabel('展示序号', '开启后会展示序号列'),
+          pipeIn: defaultValue(false)
+        }),
+        getSchemaTpl('switch', {
           name: 'syncLocation',
           label: tipedLabel(
             '同步地址栏',
             '开启后会把查询条件数据和分页信息同步到地址栏中，页面中出现多个时，建议只保留一个同步地址栏，否则会相互影响。'
           ),
-          pipeIn: defaultValue(true)
+          pipeIn: defaultValue(false)
         })
       ]
     };
@@ -907,6 +912,11 @@ export class BaseCRUDPlugin extends BasePlugin {
           label: tipedLabel('静默拉取', '刷新时是否隐藏加载动画'),
           pipeIn: defaultValue(false)
         })
+        // getSchemaTpl('switch', {
+        //   name: 'showIndex',
+        //   label: tipedLabel('展示序号', '')
+        //   // pipeIn: defaultValue(true)
+        // })
       ]
     };
   }

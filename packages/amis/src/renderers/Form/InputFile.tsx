@@ -1447,11 +1447,16 @@ export default class FileControl extends React.Component<FileProps, FileState> {
               ) : (
                 <>
                   <Button
+                    // level="default"
+                    disabled={disabled || this.state.uploading}
                     level="enhance"
-                    disabled={disabled}
+                    // disabled={disabled}
                     className={cx('FileControl-selectBtn', btnClassName, {
                       'is-disabled':
-                        multiple && !!maxLength && files.length >= maxLength
+                        (multiple &&
+                          !!maxLength &&
+                          files.length >= maxLength) ||
+                        this.state.uploading
                     })}
                     tooltip={
                       multiple && maxLength && files.length >= maxLength

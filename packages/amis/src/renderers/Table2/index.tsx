@@ -1608,8 +1608,8 @@ export default class Table2 extends React.Component<Table2Props, object> {
     }
 
     if (rowItem && onRow) {
-      onRow.onRowDbClick &&
-        onRow.onRowDbClick(event, rowItem, rowIndex);
+      onRow.onRowDoubleClick &&
+        onRow.onRowDoubleClick(event, rowItem, rowIndex);
     }
   }
 

@@ -17,6 +17,12 @@ import {ClassNamesFn, themeable, ThemeProps} from 'amis-core';
 import {Icon} from './icons';
 import {LocaleProps, localeable} from 'amis-core';
 import {autobind, getScrollbarWidth} from 'amis-core';
+import {DraggableCore} from 'react-draggable';
+import type {
+  DraggableBounds,
+  DraggableEvent,
+  DraggableData
+} from 'react-draggable';
 
 export const getContainerWithFullscreen =
   (container?: () => HTMLElement | HTMLElement | null) => () => {
@@ -53,8 +59,12 @@ export interface ModalProps extends ThemeProps, LocaleProps {
   children?: React.ReactNode | Array<React.ReactNode>;
   modalClassName?: string;
   modalMaskClassName?: string;
+  draggable?: boolean;
 }
-export interface ModalState {}
+export interface ModalState {
+  bounds?: DraggableBounds;
+  dragging?: {top: number; left: number};
+}
 const fadeStyles: {
   [propName: string]: string;
 } = {
@@ -173,6 +183,17 @@ export class Modal extends React.Component<ModalProps, ModalState> {
     )
   );
 
+  draggleRef: any;
+
+  constructor(props: any) {
+    super(props);
+    this.state = {
+      bounds: {left: 0, top: 0, bottom: 0, right: 0},
+      dragging: undefined
+    };
+    this.draggleRef = React.createRef();
+  }
+
   componentDidMount() {
     if (this.props.show) {
       this.handleEnter();
@@ -185,6 +206,68 @@ export class Modal extends React.Component<ModalProps, ModalState> {
       this.handleExited();
     }
   }
+
+  handleDragStart = (_event: DraggableEvent, uiData: DraggableData) => {
+    const {clientWidth, clientHeight} = window.document.documentElement;
+    const targetRect = this.draggleRef.current?.getBoundingClientRect?.();
+    if (!targetRect) {
+      return;
+    }
+    const nodeStyle = getComputedStyle(uiData.node);
+    const marginTop = int(nodeStyle.marginTop);
+    this.setState({
+      bounds: {
+        left: 0,
+        right: clientWidth - targetRect.width,
+        top: -marginTop,
+        bottom: clientHeight - targetRect.height - marginTop
+      }
+    });
+
+    const newPosition: {top: number; left: number} = {top: 0, left: 0};
+    const node = uiData.node;
+    const transformScale = 1;
+    const {offsetParent} = uiData.node;
+    if (!offsetParent) return;
+    const parentRect = offsetParent.getBoundingClientRect();
+    const clientRect = node.getBoundingClientRect();
+    const cLeft = clientRect.left / transformScale;
+    const pLeft = parentRect.left / transformScale;
+    const cTop = clientRect.top / transformScale;
+    const pTop = parentRect.top / transformScale;
+    newPosition.left = cLeft - pLeft + offsetParent.scrollLeft;
+    newPosition.top = cTop - pTop + offsetParent.scrollTop - marginTop;
+    this.setState({dragging: newPosition});
+    _event.stopPropagation();
+  };
+
+  onDrag = (e: any, {node, deltaX, deltaY}: any) => {
+    e.stopPropagation();
+    if (!this.state.dragging) {
+      throw new Error('onDrag called before onDragStart.');
+    }
+    let top = this.state.dragging.top + deltaY;
+    let left = this.state.dragging.left + deltaX;
+    const bounds = this.state.bounds;
+    const [x, y] = getBoundPosition(node, bounds, left, top);
+    const newPosition = {top: y, left: x};
+    this.setState({dragging: newPosition});
+  };
+
+  /**
+   * onDragStop event handler
+   * @param  {Event}  e             event data
+   * @param  {Object} callbackData  an object with node, delta and position information
+   */
+  onDragStop = (e: any, {node}: any) => {
+    if (!this.state.dragging) {
+      throw new Error('onDragEnd called before onDragStart.');
+    }
+
+    const {left, top} = this.state.dragging;
+    const newPosition: {top: number; left: number} = {top, left};
+    this.setState({dragging: newPosition});
+  };
 
   handleEnter = () => {
     document.body.classList.add(`is-modalOpened`);
@@ -283,6 +366,23 @@ export class Modal extends React.Component<ModalProps, ModalState> {
     this.isRootClosed && !e.defaultPrevented && onHide(e);
   }
 
+  createStyle = (pos?: {left: number; top: number}) => {
+    if (!pos) {
+      return {};
+    }
+    const useCSSTransforms = false;
+    let style: any;
+    // 这里不能使用transform modal使用fixed定位 transform会影响fixed的相对位置
+    if (useCSSTransforms) {
+      style = setTransform(pos);
+    } else {
+      // top,left (slow)
+      style = setTopLeft(pos);
+    }
+
+    return style;
+  };
+
   render() {
     const {
       className,
@@ -297,7 +397,9 @@ export class Modal extends React.Component<ModalProps, ModalState> {
       height,
       modalClassName,
       modalMaskClassName,
-      classnames: cx
+      classnames: cx,
+      classPrefix,
+      draggable = false
     } = this.props;
 
     let _style = {
@@ -338,18 +440,29 @@ export class Modal extends React.Component<ModalProps, ModalState> {
                   )}
                 />
               ) : null}
-              <div
-                className={cx(
-                  `Modal-content`,
-                  size === 'custom' ? 'Modal-content-custom' : '',
-                  contentClassName,
-                  modalClassName,
-                  contentFadeStyles[status]
-                )}
-                style={_style}
+
+              <DraggableCore
+                disabled={!draggable}
+                onStart={(event, uiData) => this.handleDragStart(event, uiData)}
+                onDrag={this.onDrag}
+                onStop={this.onDragStop}
+                handle={`.${classPrefix}Modal-header`}
+                nodeRef={this.draggleRef}
               >
-                {status === EXITED ? null : children}
-              </div>
+                <div
+                  ref={this.draggleRef}
+                  className={cx(
+                    `Modal-content`,
+                    size === 'custom' ? 'Modal-content-custom' : '',
+                    contentClassName,
+                    modalClassName,
+                    contentFadeStyles[status]
+                  )}
+                  style={{..._style, ...this.createStyle(this.state.dragging)}}
+                >
+                  {status === EXITED ? null : children}
+                </div>
+              </DraggableCore>
             </div>
           </Portal>
         )}
@@ -366,3 +479,132 @@ export default FinalModal as typeof FinalModal & {
   Body: typeof Modal.Body;
   Footer: typeof Modal.Footer;
 };
+export function setTransform({top, left, width, height}: any) {
+  // Replace unitless items with px
+  const translate = `translate(${left}px,${top}px)`;
+  return {
+    transform: translate,
+    WebkitTransform: translate,
+    MozTransform: translate,
+    msTransform: translate,
+    OTransform: translate,
+    // width: `${width}px`,
+    // height: `${height}px`,
+    position: 'absolute'
+  };
+}
+
+export function setTopLeft({top, left, width, height}: any): Object {
+  return {
+    top: `${top}px`,
+    left: `${left}px`,
+    // width: `${width}px`,
+    // height: `${height}px`,
+    position: 'absolute'
+  };
+}
+export function perc(num: number): string {
+  return num * 100 + '%';
+}
+
+export function getBoundPosition(
+  node: HTMLElement,
+  bounds: any,
+  x: number,
+  y: number
+): [number, number] {
+  bounds = typeof bounds === 'string' ? bounds : {...bounds};
+
+  if (typeof bounds === 'string') {
+    const {ownerDocument} = node;
+    const ownerWindow: any = ownerDocument.defaultView;
+    let boundNode;
+    if (bounds === 'parent') {
+      boundNode = node.parentNode;
+    } else {
+      boundNode = ownerDocument.querySelector(bounds);
+    }
+    if (!(boundNode instanceof ownerWindow.HTMLElement)) {
+      throw new Error(
+        'Bounds selector "' + bounds + '" could not find an element.'
+      );
+    }
+    const boundNodeEl: any = boundNode; // for Flow, can't seem to refine correctly
+    const nodeStyle = ownerWindow.getComputedStyle(node);
+    const boundNodeStyle = ownerWindow.getComputedStyle(boundNodeEl);
+    // Compute bounds. This is a pain with padding and offsets but this gets it exactly right.
+    bounds = {
+      left:
+        -node.offsetLeft +
+        int(boundNodeStyle.paddingLeft) +
+        int(nodeStyle.marginLeft),
+      top:
+        -node.offsetTop +
+        int(boundNodeStyle.paddingTop) +
+        int(nodeStyle.marginTop),
+      right:
+        innerWidth(boundNodeEl) -
+        outerWidth(node) -
+        node.offsetLeft +
+        int(boundNodeStyle.paddingRight) -
+        int(nodeStyle.marginRight),
+      bottom:
+        innerHeight(boundNodeEl) -
+        outerHeight(node) -
+        node.offsetTop +
+        int(boundNodeStyle.paddingBottom) -
+        int(nodeStyle.marginBottom)
+    };
+  }
+
+  // Keep x and y below right and bottom limits...
+  if (isNum(bounds.right)) x = Math.min(x, bounds.right);
+  if (isNum(bounds.bottom)) y = Math.min(y, bounds.bottom);
+
+  // But above left and top limits.
+  if (isNum(bounds.left)) x = Math.max(x, bounds.left);
+  if (isNum(bounds.top)) y = Math.max(y, bounds.top);
+
+  return [x, y];
+}
+
+export function isNum(num: any): boolean {
+  return typeof num === 'number' && !isNaN(num);
+}
+
+export function int(a: string): number {
+  return parseInt(a, 10);
+}
+
+export function outerHeight(node: any): number {
+  // This is deliberately excluding margin for our calculations, since we are using
+  // offsetTop which is including margin. See getBoundPosition
+  let height = node.clientHeight;
+  const computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+  height += int(computedStyle.borderTopWidth);
+  height += int(computedStyle.borderBottomWidth);
+  return height;
+}
+
+export function outerWidth(node: any): number {
+  let width = node.clientWidth;
+  const computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+  width += int(computedStyle.borderLeftWidth);
+  width += int(computedStyle.borderRightWidth);
+  return width;
+}
+export function innerHeight(node: any): number {
+  let height = node.clientHeight;
+  const computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+  height -= int(computedStyle.paddingTop);
+  height -= int(computedStyle.paddingBottom);
+  return height;
+}
+
+export function innerWidth(node: any): number {
+  let width = node.clientWidth;
+  const computedStyle = node.ownerDocument.defaultView.getComputedStyle(node);
+  width -= int(computedStyle.paddingLeft);
+  width -= int(computedStyle.paddingRight);
+  return width;
+}

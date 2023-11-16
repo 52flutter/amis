@@ -212,6 +212,7 @@ type AutoFillHeightObject = Record<'height' | 'maxHeight', number>;
  * 文档：https://aisuda.bce.baidu.com/amis/zh-CN/components/table
  */
 export interface TableSchema extends BaseSchema {
+  showIndex?: boolean;
   /**
    * 指定为表格渲染器。
    */
@@ -604,6 +605,7 @@ export default class Table extends React.Component<TableProps, object> {
       canAccessSuperData,
       lazyRenderAfter,
       tableLayout,
+      translate: __,
       resolveDefinitions
     } = props;
 
@@ -613,6 +615,21 @@ export default class Table extends React.Component<TableProps, object> {
         resolveVariableAndFilter(combineNum, props.data, '| raw'),
         10
       );
+    }
+
+    let _columns = columns ?? [];
+    // Friday 增加序号
+    const showIndex = this.props.showIndex;
+    if (showIndex) {
+      _columns = _columns.concat();
+      _columns.unshift({
+        label: __('Table.index'),
+        width: 60,
+        name: 'auto_index',
+        component: (props: any) => {
+          return <td>{props.row.index + 1}</td>;
+        }
+      });
     }
 
     store.update(
@@ -878,7 +895,8 @@ export default class Table extends React.Component<TableProps, object> {
         'loading',
         'canAccessSuperData',
         'lazyRenderAfter',
-        'tableLayout'
+        'tableLayout',
+        'showIndex'
       ],
       prevProps,
       props,
@@ -898,6 +916,23 @@ export default class Table extends React.Component<TableProps, object> {
         }
         if (changes.orderBy && !props.onQuery) {
           delete changes.orderBy;
+        }
+        if (changes.columns) {
+          let _columns = changes.columns ?? [];
+          // Friday 增加序号
+          const showIndex = props.showIndex;
+          if (showIndex && !_columns.find(p => p?.name === 'auto_index')) {
+            _columns = _columns.concat();
+            _columns.unshift({
+              name: 'auto_index',
+              label: props.translate('Table.index'),
+              width: 60,
+              component: (props: any) => {
+                return <td>{props.row.index + 1}</td>;
+              }
+            });
+            changes.columns = _columns;
+          }
         }
         store.update(changes as any, {
           resolveDefinitions: props.resolveDefinitions
@@ -1033,7 +1068,10 @@ export default class Table extends React.Component<TableProps, object> {
   }
 
   handleRowDbClick(item: IRow, index: number) {
-    const {dispatchEvent, store, data} = this.props;
+    const {dispatchEvent, store, data, onRowDbClick} = this.props;
+    if (onRowDbClick) {
+      onRowDbClick(item, index);
+    }
     return dispatchEvent(
       'rowDbClick',
       createObject(data, {

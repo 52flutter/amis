@@ -10,7 +10,8 @@ import {
   BasePlugin,
   RegionConfig,
   getSchemaTpl,
-  tipedLabel
+  tipedLabel,
+  defaultValue
 } from 'amis-editor-core';
 import {DSBuilderManager} from '../builder/DSBuilderManager';
 import {DSFeatureEnum, ModelDSBuilderKey, ApiDSBuilderKey} from '../builder';
@@ -55,7 +56,8 @@ export class ServicePlugin extends BasePlugin {
   scaffold = {
     type: 'service',
     /** region 区域的 placeholder 会撑开内容区 */
-    body: []
+    body: [],
+    initFetch: true
   };
   previewSchema = {
     type: 'service',
@@ -268,7 +270,38 @@ export class ServicePlugin extends BasePlugin {
               title: '基本',
               body: [
                 getSchemaTpl('layout:originPosition', {value: 'left-top'}),
-                ...generateDSControls()
+                ...generateDSControls(),
+                getSchemaTpl('initFetch', {
+                  name: 'initFetch',
+                  label: '默认拉取',
+                  visibleOn:
+                    'typeof this.api === "string" ? this.api : this.api && this.api.url',
+                  pipeIn: defaultValue(true)
+                }),
+                {
+                  type: 'input-number',
+                  name: 'interval',
+                  label: tipedLabel(
+                    '轮询时间间隔',
+                    '轮询时间间隔，单位 ms(最低 1000)'
+                  ),
+
+                  mode: 'horizontal',
+                  labelAlign: 'left',
+                  horizontal: {
+                    justify: true,
+                    left: 4
+                  },
+                  visibleOn:
+                    'typeof this.api === "string" ? this.api : this.api && this.api.url',
+
+                  min: 1000
+                },
+                getSchemaTpl('switch', {
+                  name: 'silentPolling',
+                  label: '轮询时是否显示加载动画',
+                  visibleOn: 'this.interval && this.interval>0'
+                })
               ]
             },
             {

@@ -445,7 +445,7 @@
 
         /* 如果size设置了full就占满剩余空间 */
         .#{$ns}Form-control:first-child.is-full {
-          width: -webkit-fill-available;
+          width: stretch;
         }
       }
     }
@@ -719,9 +719,7 @@
 
     .#{$ns}Form-item-controlBox {
       flex: 1;
-      max-width: -moz-available;
-      max-width: -webkit-fill-available;
-      max-width: fill-available;
+      max-width: stretch;
     }
 
     .#{$ns}Form-static {

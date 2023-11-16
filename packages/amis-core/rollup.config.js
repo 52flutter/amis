@@ -21,7 +21,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 const settings = {
   globals: {}
 };
-
+// console.log("dependencies",dependencies)
 const external = id => {
   const result = new RegExp(
     `^(?:${Object.keys(dependencies)

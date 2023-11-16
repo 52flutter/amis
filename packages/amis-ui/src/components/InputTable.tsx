@@ -220,6 +220,20 @@ export function InputTable({
 
     return (
       <div className={cx(`Table`, `InputTable-UI`, className)}>
+        {addable !== false && (!maxLength || fields.length < maxLength) ? (
+          <div className={cx(`InputTable-toolbar`)}>
+            <Button
+              className={cx(addButtonClassName)}
+              size="sm"
+              {...addButtonProps}
+              onClick={() => handleItemAdd()}
+            >
+              <Icon icon="plus" className="icon" />
+              <span>{__(addButtonText || 'add')}</span>
+            </Button>
+            {footer?.()}
+          </div>
+        ) : null}
         <div
           className={cx(`Table-contentWrap`, {'is-fixed': enableScroll})}
           style={{maxHeight: enableScroll ? scroll.y : 'unset'}}
@@ -280,19 +294,8 @@ export function InputTable({
             </tbody>
           </table>
         </div>
-        {addable !== false && (!maxLength || fields.length < maxLength) ? (
-          <div className={cx(`InputTable-toolbar`)}>
-            <Button
-              className={cx(addButtonClassName)}
-              size="sm"
-              {...addButtonProps}
-              onClick={() => handleItemAdd()}
-            >
-              <Icon icon="plus" className="icon" />
-              <span>{__(addButtonText || 'add')}</span>
-            </Button>
-            {footer?.()}
-          </div>
+        {footer ? (
+          <div className={cx(`InputTable-toolbar`)}>{footer?.()} </div>
         ) : null}
       </div>
     );

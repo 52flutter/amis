@@ -50,6 +50,7 @@ import './renderer/crud2-control/CRUDFiltersControl';
 import './renderer/InputRangeValueControl';
 import './renderer/FunctionEditorControl';
 import './renderer/ListItemControl';
+import './renderer/ColumnControl';
 
 import 'amis-theme-editor/lib/locale/zh-CN';
 import 'amis-theme-editor/lib/locale/en-US';

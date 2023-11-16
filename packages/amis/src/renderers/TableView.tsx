@@ -214,9 +214,20 @@ export default class TableView extends React.Component<TableViewProps, object> {
 
   renderTds(tds: TdObject[], rowIndex: number) {
     const {data} = this.props;
-    return tds.map((td, colIndex) =>
-      this.renderTd(resolveMappingObject(td, data), colIndex, rowIndex)
-    );
+    return tds.map((td, colIndex) => {
+      return this.renderTd(
+        // 处理style支持表达式
+        resolveMappingObject(
+          {
+            ...td,
+            style: td.style ? resolveMappingObject(td.style, data) : undefined
+          },
+          data
+        ),
+        colIndex,
+        rowIndex
+      );
+    });
   }
 
   renderTr(tr: TrObject, rowIndex: number) {

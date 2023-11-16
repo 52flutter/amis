@@ -80,7 +80,7 @@ export class Button extends React.Component<ButtonProps> {
       ...rest
     } = this.props;
 
-    if (href) {
+    if (href || overrideClassName) {
       Comp = 'a';
     } else if ((Comp === 'button' && disabled) || loading) {
       Comp = 'div';
@@ -102,7 +102,8 @@ export class Button extends React.Component<ButtonProps> {
                 [`Button--block`]: block,
                 [`Button--iconOnly`]: iconOnly,
                 'is-disabled': disabled,
-                'is-active': active
+                'is-active': active,
+                [`Button--loading`]: loading
               },
           className
         )}

@@ -100,6 +100,7 @@
           font-weight: var(--Timeline-detail-label-fontWeight);
           margin-bottom: var(--TimelineItem--detail-button-margin-bottom);
         }
+
         .#{$ns}TimelineItem-detail-arrow {
           color: var(--Timeline-detail-icon-color);
           width: var(--TimelineItem-detail-arrow-width);
@@ -174,7 +175,7 @@
 
   .#{$ns}TimelineItem {
     display: flex;
-    width: -webkit-fill-available;
+    width: stretch;
     flex-flow: column;
 
     &:last-of-type {

@@ -75,6 +75,7 @@ export class CRUDPlugin extends BasePlugin {
 
   scaffold: any = {
     type: 'crud',
+    // friday
     syncLocation: false,
     api: '',
     columns: [
@@ -276,6 +277,32 @@ export class CRUDPlugin extends BasePlugin {
       eventName: 'rowClick',
       eventLabel: '行单击',
       description: '点击整行事件',
+      dataSchema: [
+        {
+          type: 'object',
+          properties: {
+            data: {
+              type: 'object',
+              title: '数据',
+              properties: {
+                item: {
+                  type: 'object',
+                  title: '当前行记录'
+                },
+                index: {
+                  type: 'number',
+                  title: '当前行索引'
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      eventName: 'rowDbClick',
+      eventLabel: '行双击',
+      description: '双击整行事件',
       dataSchema: [
         {
           type: 'object',
@@ -1062,7 +1089,8 @@ export class CRUDPlugin extends BasePlugin {
           getSchemaTpl('switch', {
             name: 'syncLocation',
             label: '同步地址栏',
-            pipeIn: defaultValue(true),
+            // Friday
+            pipeIn: defaultValue(false),
             labelRemark: {
               className: 'm-l-xs',
               trigger: 'click',

@@ -235,6 +235,16 @@ export class DialogPlugin extends BasePlugin {
                 value: true
               }),
               getSchemaTpl('switch', {
+                label: '位置拖拽',
+                name: 'draggable'
+                // value: defaultValue(true)
+              }),
+              getSchemaTpl('switch', {
+                label: '遮罩',
+                name: 'overlay',
+                value: true
+              }),
+              getSchemaTpl('switch', {
                 label: '点击遮罩关闭',
                 name: 'closeOnOutside',
                 value: false

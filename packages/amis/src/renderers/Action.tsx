@@ -10,12 +10,14 @@ import {
   RendererProps,
   ScopedContext,
   uuid,
-  setThemeClassName
+  setThemeClassName,
+  Overlay
 } from 'amis-core';
 import {filter} from 'amis-core';
 import {BadgeObject, Button, SpinnerExtraProps} from 'amis-ui';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
+import Popconfirm from '../components/popconfirm/popconfirm';
 
 export interface ButtonSchema extends BaseSchema {
   /**
@@ -429,7 +431,8 @@ const ActionProps = [
   'countDown',
   'fileName',
   'isolateScope',
-  'downloadFileName'
+  'downloadFileName',
+  'popConfirm'
 ];
 import {filterContents} from './Remark';
 import {ClassNamesFn, themeable, ThemeProps} from 'amis-core';
@@ -581,7 +584,7 @@ export class Action extends React.Component<ActionProps, ActionState> {
   }
 
   @autobind
-  async handleAction(e: React.MouseEvent<any>) {
+  async handleAction(e: React.MouseEvent<any>, confirm?: boolean) {
     const {onAction, onActionSensor, disabled, countDown, env} = this.props;
     // https://reactjs.org/docs/legacy-event-pooling.html
     e.persist(); // 等 react 17之后去掉 event pooling 了，这个应该就没用了
@@ -590,6 +593,7 @@ export class Action extends React.Component<ActionProps, ActionState> {
     if (typeof onClick === 'string') {
       onClick = str2AsyncFunction(onClick, 'event', 'props');
     }
+
     const result: any = onClick && (await onClick(e, this.props));
 
     if (
@@ -803,47 +807,70 @@ export class Action extends React.Component<ActionProps, ActionState> {
       />
     );
 
+    const action = pick(this.props, ActionProps) as ActionSchema;
+    const popconfirm =
+      (action as any)?.confirmText && (action as any)?.popConfirm === true;
+    let content = (
+      <Button
+        loadingConfig={loadingConfig}
+        className={cx(
+          className,
+          setThemeClassName('wrapperCustomStyle', id, wrapperCustomStyle),
+          setThemeClassName('className', id, themeCss || css),
+          {
+            [activeClassName || 'is-active']: isActive
+          }
+        )}
+        style={style}
+        size={size}
+        level={
+          activeLevel && isActive
+            ? activeLevel
+            : filter(level, data) || (primary ? 'primary' : undefined)
+        }
+        loadingClassName={loadingClassName}
+        loading={isMenuItem ? false : loading}
+        onClick={popconfirm ? undefined : this.handleAction}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        type={type && ~allowedType.indexOf(type) ? type : 'button'}
+        disabled={disabled}
+        componentClass={isMenuItem ? 'a' : componentClass}
+        overrideClassName={isMenuItem}
+        tooltip={filterContents(tooltip, data)}
+        disabledTip={filterContents(disabledTip, data)}
+        tooltipPlacement={tooltipPlacement}
+        tooltipContainer={tooltipContainer}
+        tooltipTrigger={tooltipTrigger}
+        tooltipRootClose={tooltipRootClose}
+        block={block}
+        iconOnly={!!(icon && !label && level !== 'link')}
+      >
+        {!loading ? iconElement : ''}
+        {label ? <span>{filter(String(label), data)}</span> : null}
+        {rightIconElement}
+      </Button>
+    );
+    if (popconfirm) {
+      const mergedData = this.props.data;
+      const confirmText = filter(action.confirmText, mergedData);
+      const confirmTitle = filter((action as any).confirmTitle, mergedData);
+      content = (
+        <Popconfirm
+          title={confirmTitle}
+          message={confirmText}
+          disabled={disabled}
+          onConfirm={this.handleAction}
+        >
+          {content}
+        </Popconfirm>
+      );
+    }
+
+    // console.log('propconfirm', this.props, action);
     return (
       <>
-        <Button
-          loadingConfig={loadingConfig}
-          className={cx(
-            className,
-            setThemeClassName('wrapperCustomStyle', id, wrapperCustomStyle),
-            setThemeClassName('className', id, themeCss || css),
-            {
-              [activeClassName || 'is-active']: isActive
-            }
-          )}
-          style={style}
-          size={size}
-          level={
-            activeLevel && isActive
-              ? activeLevel
-              : filter(level, data) || (primary ? 'primary' : undefined)
-          }
-          loadingClassName={loadingClassName}
-          loading={loading}
-          onClick={this.handleAction}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-          type={type && ~allowedType.indexOf(type) ? type : 'button'}
-          disabled={disabled}
-          componentClass={isMenuItem ? 'a' : componentClass}
-          overrideClassName={isMenuItem}
-          tooltip={filterContents(tooltip, data)}
-          disabledTip={filterContents(disabledTip, data)}
-          tooltipPlacement={tooltipPlacement}
-          tooltipContainer={tooltipContainer}
-          tooltipTrigger={tooltipTrigger}
-          tooltipRootClose={tooltipRootClose}
-          block={block}
-          iconOnly={!!(icon && !label && level !== 'link')}
-        >
-          {!loading ? iconElement : ''}
-          {label ? <span>{filter(String(label), data)}</span> : null}
-          {rightIconElement}
-        </Button>
+        {content}
         {/* button自定义样式 */}
         <CustomStyle
           config={{
@@ -902,13 +929,18 @@ export type ActionRendererProps = RendererProps &
 })
 // @ts-ignore 类型没搞定
 @withBadge
-export class ActionRenderer extends React.Component<ActionRendererProps> {
+export class ActionRenderer extends React.Component<
+  ActionRendererProps,
+  {loading: boolean}
+> {
   static contextType = ScopedContext;
 
   constructor(props: ActionRendererProps, scoped: IScopedContext) {
     super(props);
 
     scoped.registerComponent(this);
+
+    this.state = {loading: false};
   }
 
   componentWillUnmount() {
@@ -937,9 +969,13 @@ export class ActionRenderer extends React.Component<ActionRendererProps> {
     e: React.MouseEvent<any> | string | void | null,
     action: any
   ) {
+    this.setState({loading: true});
     const {env, onAction, data, ignoreConfirm, dispatchEvent, $schema} =
       this.props;
     let mergedData = data;
+
+    const popconfirm =
+      (action as any)?.confirmText && (action as any)?.popConfirm === true;
 
     if (action?.actionType === 'click' && isObject(action?.args)) {
       mergedData = createObject(data, action.args);
@@ -950,6 +986,7 @@ export class ActionRenderer extends React.Component<ActionRendererProps> {
     // 有些组件虽然要求这里忽略二次确认，但是如果配了事件动作还是需要在这里等待二次确认提交才可以
     if (
       (!ignoreConfirm || hasOnEvent) &&
+      !popconfirm &&
       action.confirmText &&
       env.confirm &&
       (confirmText = filter(action.confirmText, mergedData))
@@ -968,14 +1005,17 @@ export class ActionRenderer extends React.Component<ActionRendererProps> {
 
         // 阻止原有动作执行
         if (rendererEvent?.prevented) {
+          this.setState({loading: false});
           return;
         }
 
         // 因为crud里面也会处理二次确认，所以如果按钮处理过了就跳过crud的二次确认
         onAction(e, {...action, ignoreConfirm: !!hasOnEvent}, mergedData);
       } else if (action.countDown) {
+        this.setState({loading: false});
         throw new Error('cancel');
       }
+      this.setState({loading: false});
     } else {
       // 触发渲染器事件
       const rendererEvent = await dispatchEvent(
@@ -985,10 +1025,16 @@ export class ActionRenderer extends React.Component<ActionRendererProps> {
 
       // 阻止原有动作执行
       if (rendererEvent?.prevented) {
+        this.setState({loading: false});
         return;
       }
-
-      onAction(e, action, mergedData);
+      try {
+        onAction(e, action, mergedData);
+      } catch (ex) {
+        this.setState({loading: false});
+        throw ex;
+      }
+      this.setState({loading: false});
     }
   }
 
@@ -1021,17 +1067,18 @@ export class ActionRenderer extends React.Component<ActionRendererProps> {
   }
 
   render() {
-    const {env, disabled, btnDisabled, loading, ...rest} = this.props;
+    const {env, disabled, btnDisabled, ...rest} = this.props;
 
     return (
       <Action
+        loading={this.state.loading}
         {...(rest as any)}
         env={env}
         disabled={disabled || btnDisabled}
         onAction={this.handleAction}
         onMouseEnter={this.handleMouseEnter}
         onMouseLeave={this.handleMouseLeave}
-        loading={loading}
+        // loading={loading}
         isCurrentUrl={this.isCurrentAction}
         tooltipContainer={rest.popOverContainer || env.getModalContainer}
       />

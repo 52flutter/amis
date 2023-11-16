@@ -1,6 +1,11 @@
 .#{$ns}Crud2 {
   position: relative;
 
+  &-header {
+    display: flex;
+    justify-content: space-between;
+  }
+
   &-selection,
   &-toolbar,
   &-body {
@@ -26,21 +31,21 @@
     font-weight: var(--Pick-base-value-fontWeight);
     background: var(--Pick-base-value-bgColor);
     border-width: var(--Pick-base-value-top-border-width)
-        var(--Pick-base-value-right-border-width)
-        var(--Pick-base-value-bottom-border-width)
-        var(--Pick-base-value-left-border-width);
+      var(--Pick-base-value-right-border-width)
+      var(--Pick-base-value-bottom-border-width)
+      var(--Pick-base-value-left-border-width);
     border-style: var(--Pick-base-value-top-border-style)
-        var(--Pick-base-value-right-border-style)
-        var(--Pick-base-value-bottom-border-style)
-        var(--Pick-base-value-left-border-style);
+      var(--Pick-base-value-right-border-style)
+      var(--Pick-base-value-bottom-border-style)
+      var(--Pick-base-value-left-border-style);
     border-color: var(--Pick-base-value-top-border-color)
-        var(--Pick-base-value-right-border-color)
-        var(--Pick-base-value-bottom-border-color)
-        var(--Pick-base-value-left-border-color);
+      var(--Pick-base-value-right-border-color)
+      var(--Pick-base-value-bottom-border-color)
+      var(--Pick-base-value-left-border-color);
     border-radius: var(--Pick-base-top-left-border-radius)
-        var(--Pick-base-top-right-border-radius)
-        var(--Pick-base-bottom-right-border-radius)
-        var(--Pick-base-bottom-left-border-radius);
+      var(--Pick-base-top-right-border-radius)
+      var(--Pick-base-bottom-right-border-radius)
+      var(--Pick-base-bottom-left-border-radius);
     margin-right: var(--gap-xs);
     margin-top: var(--gap-xs);
 

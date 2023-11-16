@@ -100,7 +100,7 @@ export class ProgressPlugin extends BasePlugin {
               }),
 
               getSchemaTpl('placeholder', {
-                value: '-',
+                value: '--',
                 placeholder: '无数据空位提示',
                 label: tipedLabel('占位提示', '数据字段未定义时的值，不包括0')
               })

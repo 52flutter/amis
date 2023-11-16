@@ -35,7 +35,7 @@ interface ProgressProps extends ThemeProps {
 export class Progress extends React.Component<ProgressProps, Object> {
   static defaultProps: Partial<ProgressProps> = {
     type: 'line',
-    placeholder: '-',
+    placeholder: '--',
     progressClassName: '',
     map: ['bg-danger', 'bg-warning', 'bg-info', 'bg-success', 'bg-success'],
     showLabel: true
@@ -209,7 +209,11 @@ export class Progress extends React.Component<ProgressProps, Object> {
       ];
     }
 
-    return <div className={cx('Progress', className)} style={style}>{viewValue}</div>;
+    return (
+      <div className={cx('Progress', className)} style={style}>
+        {viewValue}
+      </div>
+    );
   }
 }
 

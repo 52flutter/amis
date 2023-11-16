@@ -487,7 +487,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
     headerToolbar: ['bulkActions'],
     footerToolbar: ['statistics', 'pagination'],
     primaryField: 'id',
-    syncLocation: true,
+    syncLocation: false,
     pageField: 'page',
     perPageField: 'perPage',
     pageDirectionField: 'pageDir',

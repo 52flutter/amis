@@ -473,6 +473,7 @@ export class ApiDSBuilder extends DSBuilder<
             {
               actionType: 'dialog',
               dialog: {
+                id: generateNodeId(),
                 body: {
                   ...formSchema,
                   onEvent: {
@@ -1383,7 +1384,7 @@ export class ApiDSBuilder extends DSBuilder<
       type: 'crud2',
       mode: 'table2',
       dsType: this.key,
-      syncLocation: true,
+      syncLocation: false,
       /** CRUD2使用 selectable + multiple 控制，Table2使用 rowSelection 控制 */
       ...(enableMultiple ? {selectable: true, multiple: true} : {}),
       primaryField: primaryField,

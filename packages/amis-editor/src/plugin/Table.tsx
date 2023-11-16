@@ -53,6 +53,7 @@ export class TablePlugin extends BasePlugin {
   pluginIcon = 'table-plugin';
   scaffold: SchemaObject = {
     type: 'table',
+    showIndex: true,
     columns: [
       {
         label: '列信息',
@@ -77,6 +78,7 @@ export class TablePlugin extends BasePlugin {
     type: 'table',
     className: 'text-left m-b-none',
     affixHeader: false,
+    showIndex: true,
     items: [
       {a: 1, b: 2},
       {a: 3, b: 4},
@@ -622,7 +624,11 @@ export class TablePlugin extends BasePlugin {
                   }
                 ]
               },
-
+              getSchemaTpl('switch', {
+                name: 'showIndex',
+                label: '显示序号',
+                pipeIn: defaultValue(true)
+              }),
               getSchemaTpl('switch', {
                 name: 'affixHeader',
                 label: '是否固定表头',

@@ -44,7 +44,8 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
     query: types.optional(types.frozen(), {}),
     prevPage: 1,
     page: 1,
-    perPage: 10,
+    // Friday 修改默认值
+    perPage: 30,
     total: 0,
     mode: 'normal',
     hasNext: false,
@@ -60,7 +61,7 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
   .views(self => ({
     get lastPage() {
       return Math.max(
-        Math.ceil(self.total / (self.perPage < 1 ? 10 : self.perPage)),
+        Math.ceil(self.total / (self.perPage < 1 ? 30 : self.perPage)),
         1
       );
     },
@@ -335,7 +336,8 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
           let result = normalizeApiResponseData(json.data);
 
           const {
-            total,
+            total: _total,
+            totalCount,
             count,
             page,
             hasNext,
@@ -344,7 +346,7 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
             columns,
             ...rest
           } = result;
-
+          const total = _total ?? totalCount;
           let items: Array<any>;
           if (options.source) {
             items = resolveVariableAndFilter(
@@ -479,7 +481,7 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
               json.defaultMsg
           );
 
-          // 配置了获取成功提示后提示，默认是空不会提示。
+          // 配置了获取成功提示后提示，默认是空不会提示。perPage
           options &&
             options.successMessage &&
             getEnv(self).notify('success', self.msg);

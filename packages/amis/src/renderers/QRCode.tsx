@@ -84,7 +84,7 @@ export default class QRCode extends React.Component<QRCodeProps, any> {
     backgroundColor: '#fff',
     foregroundColor: '#000',
     level: 'L',
-    placeholder: '-'
+    placeholder: '--'
   };
 
   /**

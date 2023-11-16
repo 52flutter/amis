@@ -56,7 +56,7 @@ export interface NumberProps
 
 export class NumberField extends React.Component<NumberProps> {
   static defaultProps: Pick<NumberProps, 'placeholder' | 'kilobitSeparator'> = {
-    placeholder: '-',
+    placeholder: '--',
     kilobitSeparator: true
   };
 

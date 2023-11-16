@@ -1367,7 +1367,7 @@ setSchemaTpl('tableCellPlaceholder', {
   name: 'placeholder',
   type: 'input-text',
   label: '占位符',
-  value: '-',
+  value: '--',
   description: '当没有值时用这个来替代展示'
 });
 
@@ -1482,8 +1482,10 @@ setSchemaTpl('taskRemark', {
   label: '任务说明'
 });
 
+// Friday
 setSchemaTpl('tooltip', {
-  type: 'textarea',
+  type: 'ae-textareaFormulaControl',
+  variableMode: 'tree',
   name: 'tooltip',
   label: '提示内容'
 });

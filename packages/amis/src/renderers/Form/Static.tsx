@@ -61,7 +61,7 @@ export interface StaticProps extends FormControlProps {
 
 export default class StaticControl extends React.Component<StaticProps, any> {
   static defaultProps = {
-    placeholder: '-'
+    placeholder: '--'
   };
 
   constructor(props: StaticProps) {

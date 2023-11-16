@@ -872,7 +872,7 @@ export default class Page extends React.Component<PageProps> {
       aside,
       asideClassName,
       classnames: cx,
-      showErrorMsg,
+      showErrorMsg = false,
       initApi,
       regions,
       style,
@@ -923,8 +923,8 @@ export default class Page extends React.Component<PageProps> {
               show={store.loading}
               loadingConfig={loadingConfig}
             />
-
-            {store.error && showErrorMsg !== false ? (
+            {/* friday 修改默认值 */}
+            {store.error && showErrorMsg === true ? (
               <Alert
                 level="danger"
                 showCloseButton

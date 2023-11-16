@@ -207,6 +207,8 @@ export interface CRUD2Props
     SpinnerExtraProps {
   store: ICRUDStore;
   pickerMode?: boolean; // 选择模式，用做表单中的选择操作
+
+  filterMode?: 1 | 2;
 }
 
 const INNER_EVENTS: Array<CRUDRendererEvent> = [
@@ -257,13 +259,13 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
   ];
   static defaultProps = {
     toolbarInline: true,
-    syncLocation: true,
+    syncLocation: false,
     hideQuickSaveBtn: false,
     autoJumpToTopOnPagerChange: true,
     silentPolling: false,
     autoFillHeight: false,
     showSelection: true,
-    perPage: 10,
+    perPage: 30,
     primaryField: 'id'
   };
 
@@ -1232,9 +1234,25 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
       columnsTogglable,
       headerToolbarClassName,
       footerToolbarClassName,
+      showIndex,
       ...rest
     } = this.props;
 
+    let _columns = store.columns || columns;
+    // Friday 增加序号
+    if (showIndex) {
+      _columns = _columns.concat();
+      _columns.unshift({
+        label: __('Table.index'),
+        width: 60,
+        name: 'auto_index',
+        component: (props: any) => {
+          return (
+            Math.max(0, store.perPage * (store.page - 1)) + props.row.index + 1
+          );
+        }
+      });
+    }
     return (
       <div
         className={cx('Crud2', className, {
@@ -1242,12 +1260,29 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
         })}
         style={style}
       >
-        <div className={cx('Crud2-filter')}>{this.renderFilter(filter)}</div>
-
-        <div className={cx('Crud2-toolbar', headerToolbarClassName)}>
-          {this.renderToolbar('headerToolbar', headerToolbar)}
-        </div>
-
+        {this.props.filterMode ? (
+          <div
+            className={cx(
+              'Crud2-toolbar',
+              'Crud2-header',
+              headerToolbarClassName
+            )}
+          >
+            <div className={cx('Crud2-headerToolbar')}>
+              {this.renderToolbar('headerToolbar', headerToolbar)}
+            </div>
+            <div className={cx('Crud2-filter')}>
+              {this.renderFilter(filter)}
+            </div>
+          </div>
+        ) : (
+          <div className={cx('Crud2-filter')}>
+            {this.renderFilter(filter)}
+            <div className={cx('Crud2-toolbar', headerToolbarClassName)}>
+              {this.renderToolbar('headerToolbar', headerToolbar)}
+            </div>
+          </div>
+        )}
         {showSelection && keepItemSelectionOnPageChange && multiple !== false
           ? this.renderSelection()
           : null}
@@ -1263,9 +1298,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
               (event, key: any) => !INNER_EVENTS.includes(key)
             ),
             type: mode,
-            columns: mode.startsWith('table')
-              ? store.columns || columns
-              : undefined
+            columns: mode.startsWith('table') ? _columns : undefined
           },
           {
             key: 'body',

@@ -403,13 +403,13 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     this.subFormItems[`${x}-${y}`] = form;
   }
 
-  async validate(): Promise<string | void> {
+  async validate(validateEdit?: boolean): Promise<string | void> {
     const {value, translate: __, columns} = this.props;
     const minLength = this.resolveVariableProps(this.props, 'minLength');
     const maxLength = this.resolveVariableProps(this.props, 'maxLength');
 
     // todo: 如果当前正在编辑中，表单提交了，应该先让正在编辑的东西提交然后再做验证。
-    if (~this.state.editIndex) {
+    if (validateEdit !== true && ~this.state.editIndex) {
       return __('Table.editing');
     }
 
@@ -716,6 +716,15 @@ export default class FormTable extends React.Component<TableProps, TableState> {
    * @param index 编辑的行索引
    */
   async editItem(index: number) {
+    if (
+      this.props.disabled ||
+      !this.props.editable ||
+      this.props.static ||
+      this.state.editIndex >= 0
+    ) {
+      return;
+    }
+
     const {items} = this.state;
     const item = items[index];
     const isPrevented = await this.dispatchEvent('edit', {index, item});
@@ -778,6 +787,14 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     const results = await Promise.all(
       validateForms.map(item => item.validate())
     );
+
+    if (!results?.length) {
+      // 验证子表单项
+      const msg = await this.validate(true);
+      if (msg) {
+        return;
+      }
+    }
 
     // 有校验不通过的
     if (~results.indexOf(false)) {
@@ -1271,6 +1288,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
               key={key}
               level="link"
               tooltip={__('Table.deleteRow')}
+              style={{color: 'red'}}
               tooltipContainer={props.popOverContainer || env.getModalContainer}
               disabled={disabled}
               onClick={this.removeItem.bind(this, rowIndex + offset)}
@@ -1319,7 +1337,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
     if (showIndex) {
       columns.unshift({
         label: __('Table.index'),
-        width: 50,
+        width: 60,
+        name: 'auto_index',
         children: (props: any) => {
           return <td>{props.offset + props.data.index + 1}</td>;
         }
@@ -1536,6 +1555,20 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       }
     );
   }
+  @autobind
+  handleRowDbClick(item: any, index: number) {
+    const {dispatchEvent, store, data, onRowDbClick} = this.props;
+    if (onRowDbClick) {
+      onRowDbClick(item, index);
+    }
+    return dispatchEvent(
+      'rowDbClick',
+      createObject(data, {
+        item,
+        index
+      })
+    );
+  }
 
   removeEntry(entry: any) {
     if (this.entries.has(entry)) {
@@ -1615,9 +1648,35 @@ export default class FormTable extends React.Component<TableProps, TableState> {
       showPager = true;
       offset = (page - 1) * perPage;
     }
-
+    // friday
     return (
       <div className={cx('InputTable', className)}>
+        {(!isStatic &&
+          addable &&
+          showFooterAddBtn !== false &&
+          (!maxLength || maxLength > items.length)) ||
+        showPager ? (
+          <div className={cx('InputTable-toolbar')}>
+            {addable && showFooterAddBtn !== false
+              ? render(
+                  'button',
+                  {
+                    type: 'button',
+                    level: 'primary',
+                    size: 'sm',
+                    label: __('Table.add'),
+                    icon: 'fa fa-plus',
+                    disabledTip: __('Table.addButtonDisabledTip'),
+                    ...((footerAddBtn as any) || {})
+                  },
+                  {
+                    disabled: this.computedAddBtnDisabled(),
+                    onClick: () => this.addItem(this.state.items.length)
+                  }
+                )
+              : null}
+          </div>
+        ) : null}
         {render(
           'body',
           {
@@ -1642,6 +1701,7 @@ export default class FormTable extends React.Component<TableProps, TableState> {
             onSave: this.handleTableSave,
             onRadioChange: this.handleRadioChange,
             onSaveOrder: this.handleSaveTableOrder,
+            onRowDbClick: this.handleRowDbClick,
             buildItemProps: this.buildItemProps,
             quickEditFormRef: this.subFormRef,
             quickEditFormItemRef: this.subFormItemRef,
@@ -1656,31 +1716,8 @@ export default class FormTable extends React.Component<TableProps, TableState> {
             onPristineChange: this.handlePristineChange
           }
         )}
-        {(!isStatic &&
-          addable &&
-          showFooterAddBtn !== false &&
-          (!maxLength || maxLength > items.length)) ||
-        showPager ? (
+        {showPager ? (
           <div className={cx('InputTable-toolbar', toolbarClassName)}>
-            {addable && showFooterAddBtn !== false
-              ? render(
-                  'button',
-                  {
-                    type: 'button',
-                    level: 'primary',
-                    size: 'sm',
-                    label: __('Table.add'),
-                    icon: 'fa fa-plus',
-                    disabledTip: __('Table.addButtonDisabledTip'),
-                    ...((footerAddBtn as any) || {})
-                  },
-                  {
-                    disabled: this.computedAddBtnDisabled(),
-                    onClick: () => this.addItem(this.state.items.length)
-                  }
-                )
-              : null}
-
             {showPager
               ? render(
                   'pager',
@@ -1921,6 +1958,9 @@ export class TableControlRenderer extends FormTable {
           onChange?.(newItems);
         }
       );
+      return;
+    } else if (actionType === 'editItem') {
+      await this.editItem(args?.index);
       return;
     }
     return super.doAction(action as ActionObject, ctx, ...rest);

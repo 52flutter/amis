@@ -98,7 +98,7 @@ export interface ProgressProps
 
 export class ProgressField extends React.Component<ProgressProps, object> {
   static defaultProps = {
-    placeholder: '-',
+    placeholder: '--',
     progressClassName: '',
     progressBarClassName: '',
     map: ['bg-danger', 'bg-warning', 'bg-info', 'bg-success', 'bg-success'],

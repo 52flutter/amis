@@ -41,7 +41,7 @@ export class Plain extends React.Component<PlainProps, object> {
   static defaultProps: Partial<PlainProps> = {
     wrapperComponent: '',
     inline: true,
-    placeholder: '-'
+    placeholder: '--'
   };
 
   @autobind

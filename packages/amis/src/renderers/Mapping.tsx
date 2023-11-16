@@ -157,7 +157,7 @@ export const MappingField = withStore(props =>
 )(
   class extends React.Component<MappingProps, object> {
     static defaultProps: Partial<MappingProps> = {
-      placeholder: '-',
+      placeholder: '--',
       map: {
         '*': '通配值'
       }

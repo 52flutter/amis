@@ -136,20 +136,20 @@ export default class ExcelControl extends React.PureComponent<
       if (reader.result) {
         // 如果是 xls 就用 xlsx 解析一下转成 xlsx 然后用 exceljs 解析
         // 为啥不直接用 xlsx 解析内容？因为它的社区版本不支持读图片，只有收费版才支持
-        if (fileName.toLowerCase().endsWith('.xls')) {
-          import('xlsx').then(XLSX => {
-            const workbook = XLSX.read(
-              new Uint8Array(reader.result as ArrayBuffer),
-              {
-                cellDates: true
-              }
-            );
-            const xlsxFile = XLSX.writeXLSX(workbook, {type: 'array'});
-            this.processExcelFile(xlsxFile, fileName);
-          });
-        } else {
-          this.processExcelFile(reader.result, fileName);
-        }
+        // if (fileName.toLowerCase().endsWith('.xls')) {
+        //   import('xlsx').then(XLSX => {
+        //     const workbook = XLSX.read(
+        //       new Uint8Array(reader.result as ArrayBuffer),
+        //       {
+        //         cellDates: true
+        //       }
+        //     );
+        //     const xlsxFile = XLSX.writeXLSX(workbook, {type: 'array'});
+        //     this.processExcelFile(xlsxFile, fileName);
+        //   });
+        // } else {
+        this.processExcelFile(reader.result, fileName);
+        // }
       }
     };
   }
@@ -409,7 +409,7 @@ export default class ExcelControl extends React.PureComponent<
         <Dropzone
           key="drop-zone"
           onDrop={this.handleDrop}
-          accept=".xlsx,.xls"
+          accept=".xlsx"
           multiple={false}
           disabled={disabled}
         >

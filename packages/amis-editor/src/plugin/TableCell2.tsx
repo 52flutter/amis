@@ -151,7 +151,7 @@ export class TableCell2Plugin extends BasePlugin {
         name: 'placeholder',
         type: 'input-text',
         label: tipedLabel('占位提示', '当没有值时用这个来替代展示。'),
-        value: '-'
+        value: '--'
       }
     ].filter(Boolean);
     const advanced = [
@@ -591,7 +591,7 @@ export class TableCell2Plugin extends BasePlugin {
                   name: 'placeholder',
                   type: 'input-text',
                   label: tipedLabel('占位提示', '当没有值时用这个来替代展示。'),
-                  value: '-'
+                  value: '--'
                 }
               ]).filter(Boolean)
             },

@@ -83,7 +83,7 @@ export class DateField extends React.Component<DateProps, DateState> {
     | 'updateFrequency'
     | 'displayFormat'
   > = {
-    placeholder: '-',
+    placeholder: '--',
     format: 'YYYY-MM-DD',
     valueFormat: 'X',
     fromNow: false,

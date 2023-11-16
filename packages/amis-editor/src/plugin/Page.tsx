@@ -222,7 +222,12 @@ export class PagePlugin extends BasePlugin {
                     inputClassName: 'is-inline',
                     pipeIn: defaultValue(true),
                     hiddenOn: 'data.regions && !data.regions.includes("aside")'
-                  }
+                  },
+                  // Friday
+                  getSchemaTpl('className', {
+                    name: 'className',
+                    label: 'css 类名'
+                  })
                 ]
               },
               {

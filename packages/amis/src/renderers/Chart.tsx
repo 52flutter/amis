@@ -342,16 +342,16 @@ export class Chart extends React.Component<ChartProps> {
     if (ref) {
       Promise.all([
         import('echarts'),
-        import('echarts-stat'),
+        // import('echarts-stat'),
         // @ts-ignore 官方没提供 type
         import('echarts/extension/dataTool'),
         // @ts-ignore 官方没提供 type
-        import('echarts/extension/bmap/bmap'),
+        import('echarts/extension/bmap/bmap')
         // @ts-ignore 官方没提供 type
-        import('echarts-wordcloud/dist/echarts-wordcloud')
-      ]).then(async ([echarts, ecStat]) => {
+        // import('echarts-wordcloud/dist/echarts-wordcloud')
+      ]).then(async ([echarts]) => {
         (window as any).echarts = echarts;
-        (window as any).ecStat = ecStat?.default || ecStat;
+        // (window as any).ecStat = ecStat?.default || ecStat;
 
         if (mapURL && mapName) {
           if (isPureVariable(mapURL)) {
@@ -385,17 +385,17 @@ export class Chart extends React.Component<ChartProps> {
           await onChartWillMount(echarts);
         }
 
-        if ((ecStat as any).transform) {
-          (echarts as any).registerTransform(
-            (ecStat as any).transform.regression
-          );
-          (echarts as any).registerTransform(
-            (ecStat as any).transform.histogram
-          );
-          (echarts as any).registerTransform(
-            (ecStat as any).transform.clustering
-          );
-        }
+        // if ((ecStat as any).transform) {
+        //   (echarts as any).registerTransform(
+        //     (ecStat as any).transform.regression
+        //   );
+        //   (echarts as any).registerTransform(
+        //     (ecStat as any).transform.histogram
+        //   );
+        //   (echarts as any).registerTransform(
+        //     (ecStat as any).transform.clustering
+        //   );
+        // }
 
         if (env.loadChartExtends) {
           await env.loadChartExtends();

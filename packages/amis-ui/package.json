@@ -6,8 +6,8 @@
   "version": "3.5.1",
   "description": "",
   "scripts": {
-    "build": "npm run clean-dist && NODE_ENV=production rollup -c ",
-    "build-esm": "npm run clean-dist && NODE_ENV=production rollup -c rollup.esm.config.js",
+    "build": "npm run clean-dist && cross-env NODE_ENV=production rollup -c ",
+    "build-esm": "npm run clean-dist && cross-env NODE_ENV=production rollup -c rollup.esm.config.js",
     "dev": "rollup -c -w",
     "test": "jest",
     "gen-doc": "ts-node ./scripts/genDoc.ts",
@@ -42,7 +42,6 @@
     "codemirror": "^5.63.0",
     "downshift": "6.1.12",
     "echarts": "5.4.0",
-    "froala-editor": "3.1.1",
     "hoist-non-react-statics": "^3.3.2",
     "jsbarcode": "^3.11.5",
     "keycode": "^2.2.1",

@@ -690,7 +690,7 @@ export class CRUDFiltersControl extends React.Component<
           delay={150}
         >
           <div className={cx('ae-CRUDConfigControl-list-item-info')}>
-            <span>{item.label}</span>
+            <span>{item.label ?? (item as any).placeholder}</span>
           </div>
         </TooltipWrapper>
 

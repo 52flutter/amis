@@ -234,11 +234,7 @@ export class DialogPlugin extends BasePlugin {
                 name: 'showCloseButton',
                 value: true
               }),
-              getSchemaTpl('switch', {
-                label: '位置拖拽',
-                name: 'draggable'
-                // value: defaultValue(true)
-              }),
+
               getSchemaTpl('switch', {
                 label: '遮罩',
                 name: 'overlay',
@@ -270,6 +266,11 @@ export class DialogPlugin extends BasePlugin {
                 label: '左下角展示loading动画',
                 name: 'showLoading',
                 value: true
+              }),
+              getSchemaTpl('switch', {
+                label: '是否可拖拽',
+                name: 'draggable',
+                value: false
               }),
               getSchemaTpl('dataMap')
             ]

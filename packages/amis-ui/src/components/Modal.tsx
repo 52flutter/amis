@@ -17,12 +17,13 @@ import {ClassNamesFn, themeable, ThemeProps} from 'amis-core';
 import {Icon} from './icons';
 import {LocaleProps, localeable} from 'amis-core';
 import {autobind, getScrollbarWidth} from 'amis-core';
-import {DraggableCore} from 'react-draggable';
-import type {
-  DraggableBounds,
-  DraggableEvent,
-  DraggableData
+import {
+  DraggableCore,
+  type DraggableBounds,
+  type DraggableData,
+  type DraggableEvent
 } from 'react-draggable';
+import isNumber from 'lodash/isNumber';
 
 export const getContainerWithFullscreen =
   (container?: () => HTMLElement | HTMLElement | null) => () => {
@@ -61,10 +62,12 @@ export interface ModalProps extends ThemeProps, LocaleProps {
   modalMaskClassName?: string;
   draggable?: boolean;
 }
+
 export interface ModalState {
   bounds?: DraggableBounds;
-  dragging?: {top: number; left: number};
+  dragPos?: {x: number; y: number};
 }
+
 const fadeStyles: {
   [propName: string]: string;
 } = {
@@ -72,6 +75,7 @@ const fadeStyles: {
   [ENTERED]: 'in',
   [EXITING]: 'out'
 };
+
 const contentFadeStyles: {
   [propName: string]: string;
 } = {
@@ -79,11 +83,13 @@ const contentFadeStyles: {
   [ENTERED]: '',
   [EXITING]: 'out'
 };
+
 export class Modal extends React.Component<ModalProps, ModalState> {
   static defaultProps = {
     container: document.body,
     size: '',
-    overlay: true
+    overlay: true,
+    draggable: false
   };
 
   isRootClosed = false;
@@ -183,16 +189,7 @@ export class Modal extends React.Component<ModalProps, ModalState> {
     )
   );
 
-  draggleRef: any;
-
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      bounds: {left: 0, top: 0, bottom: 0, right: 0},
-      dragging: undefined
-    };
-    this.draggleRef = React.createRef();
-  }
+  state: Readonly<ModalState> = {dragPos: undefined};
 
   componentDidMount() {
     if (this.props.show) {
@@ -366,22 +363,86 @@ export class Modal extends React.Component<ModalProps, ModalState> {
     this.isRootClosed && !e.defaultPrevented && onHide(e);
   }
 
-  createStyle = (pos?: {left: number; top: number}) => {
-    if (!pos) {
+  // #region 处理dialog拖动
+
+  handleDragStart = (_event: DraggableEvent, uiData: DraggableData) => {
+    const node = uiData.node;
+    const {offsetParent} = node;
+    if (!node || !offsetParent) {
+      return;
+    }
+    const {clientWidth, clientHeight} = window.document.documentElement;
+    const nodeStyle = getComputedStyle(node);
+    const marginTop = parseInt(nodeStyle.marginTop, 10);
+    const nodeWidth = parseInt(nodeStyle.width, 10);
+    const nodeHeight = parseInt(nodeStyle.height, 10);
+    const bounds = {
+      left: 0,
+      right: clientWidth - nodeWidth,
+      top: -marginTop,
+      bottom: clientHeight - nodeHeight - marginTop
+    };
+    const parentRect = offsetParent.getBoundingClientRect();
+    const clientRect = node.getBoundingClientRect();
+    const cLeft = clientRect.left;
+    const pLeft = parentRect.left;
+    const cTop = clientRect.top;
+    const pTop = parentRect.top;
+    const left = cLeft - pLeft + offsetParent.scrollLeft;
+    const top = cTop - pTop + offsetParent.scrollTop - marginTop;
+    this.setState({dragPos: {x: left, y: top}, bounds});
+    // 阻止冒泡  存在弹窗里面套弹窗
+    _event.stopPropagation();
+  };
+
+  handleDrag = (e: DraggableEvent, {deltaX, deltaY}: DraggableData) => {
+    e.stopPropagation();
+    if (!this.state.dragPos) {
+      return;
+    }
+    const {
+      dragPos: {x, y},
+      bounds
+    } = this.state;
+
+    let calcY = y + deltaY;
+    let calcX = x + deltaX;
+
+    // 防止拖动到屏幕外 处理边界
+    if (isNumber(bounds?.right)) {
+      calcX = Math.min(calcX, bounds!.right);
+    }
+    if (isNumber(bounds?.bottom)) {
+      calcY = Math.min(calcY, bounds!.bottom);
+    }
+    if (isNumber(bounds?.left)) {
+      calcX = Math.max(calcX, bounds!.left);
+    }
+    if (isNumber(bounds?.top)) {
+      calcY = Math.max(calcY, bounds!.top);
+    }
+    this.setState({dragPos: {x: calcX, y: calcY}});
+  };
+
+  handleDragStop = (e: DraggableEvent) => {
+    e.stopPropagation();
+  };
+
+  getDragStyle = (): React.CSSProperties => {
+    const {draggable} = this.props;
+    const {dragPos} = this.state;
+    if (!dragPos || !draggable) {
       return {};
     }
-    const useCSSTransforms = false;
-    let style: any;
-    // 这里不能使用transform modal使用fixed定位 transform会影响fixed的相对位置
-    if (useCSSTransforms) {
-      style = setTransform(pos);
-    } else {
-      // top,left (slow)
-      style = setTopLeft(pos);
-    }
-
-    return style;
+    const {x, y} = dragPos;
+    return {
+      top: `${y}px`,
+      left: `${x}px`,
+      position: 'absolute'
+    };
   };
+
+  // #endregion
 
   render() {
     const {
@@ -398,8 +459,9 @@ export class Modal extends React.Component<ModalProps, ModalState> {
       modalClassName,
       modalMaskClassName,
       classnames: cx,
-      classPrefix,
-      draggable = false
+      mobileUI,
+      draggable,
+      classPrefix
     } = this.props;
 
     let _style = {
@@ -440,25 +502,23 @@ export class Modal extends React.Component<ModalProps, ModalState> {
                   )}
                 />
               ) : null}
-
               <DraggableCore
-                disabled={!draggable}
-                onStart={(event, uiData) => this.handleDragStart(event, uiData)}
-                onDrag={this.onDrag}
-                onStop={this.onDragStop}
+                disabled={!draggable || mobileUI}
+                onStart={this.handleDragStart}
+                onDrag={this.handleDrag}
+                onStop={this.handleDragStop}
                 handle={`.${classPrefix}Modal-header`}
-                nodeRef={this.draggleRef}
               >
                 <div
-                  ref={this.draggleRef}
                   className={cx(
                     `Modal-content`,
+                    draggable && !mobileUI ? 'Modal-draggable' : '',
                     size === 'custom' ? 'Modal-content-custom' : '',
                     contentClassName,
                     modalClassName,
                     contentFadeStyles[status]
                   )}
-                  style={{..._style, ...this.createStyle(this.state.dragging)}}
+                  style={{..._style, ...this.getDragStyle()}}
                 >
                   {status === EXITED ? null : children}
                 </div>

@@ -923,8 +923,10 @@ export default class Page extends React.Component<PageProps> {
               show={store.loading}
               loadingConfig={loadingConfig}
             />
-            {/* friday 修改默认值 */}
-            {store.error && showErrorMsg === true ? (
+
+            {!env.forceSilenceInsideError &&
+            store.error &&
+            showErrorMsg !== false ? (
               <Alert
                 level="danger"
                 showCloseButton

@@ -970,37 +970,58 @@ export class ActionRenderer extends React.Component<
     action: any
   ) {
     this.setState({loading: true});
-    const {env, onAction, data, ignoreConfirm, dispatchEvent, $schema} =
-      this.props;
-    let mergedData = data;
+    try {
+      const {env, onAction, data, ignoreConfirm, dispatchEvent, $schema} =
+        this.props;
+      let mergedData = data;
 
-    const popconfirm =
-      (action as any)?.confirmText && (action as any)?.popConfirm === true;
+      const popconfirm =
+        (action as any)?.confirmText && (action as any)?.popConfirm === true;
 
-    if (action?.actionType === 'click' && isObject(action?.args)) {
-      mergedData = createObject(data, action.args);
-    }
+      if (action?.actionType === 'click' && isObject(action?.args)) {
+        mergedData = createObject(data, action.args);
+      }
 
-    const hasOnEvent = $schema.onEvent && Object.keys($schema.onEvent).length;
-    let confirmText: string = '';
-    // 有些组件虽然要求这里忽略二次确认，但是如果配了事件动作还是需要在这里等待二次确认提交才可以
-    if (
-      (!ignoreConfirm || hasOnEvent) &&
-      !popconfirm &&
-      action.confirmText &&
-      env.confirm &&
-      (confirmText = filter(action.confirmText, mergedData))
-    ) {
-      let confirmed = await env.confirm(
-        confirmText,
-        filter(action.confirmTitle, mergedData) || undefined
-      );
-      if (confirmed) {
+      const hasOnEvent = $schema.onEvent && Object.keys($schema.onEvent).length;
+      let confirmText: string = '';
+      // 有些组件虽然要求这里忽略二次确认，但是如果配了事件动作还是需要在这里等待二次确认提交才可以
+      if (
+        (!ignoreConfirm || hasOnEvent) &&
+        !popconfirm &&
+        action.confirmText &&
+        env.confirm &&
+        (confirmText = filter(action.confirmText, mergedData))
+      ) {
+        let confirmed = await env.confirm(
+          confirmText,
+          filter(action.confirmTitle, mergedData) || undefined
+        );
+        if (confirmed) {
+          // 触发渲染器事件
+          const rendererEvent = await dispatchEvent(
+            e as React.MouseEvent<any> | string,
+            mergedData,
+            this // 保证renderer可以拿到，避免因交互设计导致的清空情况，例如crud内itemAction
+          );
+
+          // 阻止原有动作执行
+          if (rendererEvent?.prevented) {
+            this.setState({loading: false});
+            return;
+          }
+
+          // 因为crud里面也会处理二次确认，所以如果按钮处理过了就跳过crud的二次确认
+          onAction(e, {...action, ignoreConfirm: !!hasOnEvent}, mergedData);
+        } else if (action.countDown) {
+          this.setState({loading: false});
+          throw new Error('cancel');
+        }
+        this.setState({loading: false});
+      } else {
         // 触发渲染器事件
         const rendererEvent = await dispatchEvent(
           e as React.MouseEvent<any> | string,
-          mergedData,
-          this // 保证renderer可以拿到，避免因交互设计导致的清空情况，例如crud内itemAction
+          mergedData
         );
 
         // 阻止原有动作执行
@@ -1009,32 +1030,13 @@ export class ActionRenderer extends React.Component<
           return;
         }
 
-        // 因为crud里面也会处理二次确认，所以如果按钮处理过了就跳过crud的二次确认
-        onAction(e, {...action, ignoreConfirm: !!hasOnEvent}, mergedData);
-      } else if (action.countDown) {
-        this.setState({loading: false});
-        throw new Error('cancel');
-      }
-      this.setState({loading: false});
-    } else {
-      // 触发渲染器事件
-      const rendererEvent = await dispatchEvent(
-        e as React.MouseEvent<any> | string,
-        mergedData
-      );
-
-      // 阻止原有动作执行
-      if (rendererEvent?.prevented) {
-        this.setState({loading: false});
-        return;
-      }
-      try {
         onAction(e, action, mergedData);
-      } catch (ex) {
+
         this.setState({loading: false});
-        throw ex;
       }
+    } catch (ex) {
       this.setState({loading: false});
+      throw ex;
     }
   }
 

@@ -1377,7 +1377,8 @@ export class CRUDPlugin extends BasePlugin {
               getSchemaTpl('quickSaveFailed')
             ]
           }
-        ]
+        ],
+        visibleOn: '!this.pickerMode'
       },
 
       {

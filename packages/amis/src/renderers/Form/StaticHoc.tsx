@@ -23,6 +23,7 @@ function renderCommonStatic(props: any, defaultValue: string) {
     case 'transfer-picker':
     case 'tabs-transfer':
     case 'tabs-transfer-picker':
+    case 'picker':
       return render('static-select', {type: 'words'}, staticProps);
 
     case 'input-date':
@@ -135,7 +136,7 @@ export function supportStatic<T extends FormControlProps>() {
 
         return (
           <ErrorBoundary
-            customErrorMsg={`拦截到${props.$schema.type}渲染错误，当前组件schema: ${props.$schema}`}
+            customErrorMsg={`拦截到${props.$schema.type}渲染错误`}
             fallback={() => {
               return (
                 <div className="renderer-error-boundary">

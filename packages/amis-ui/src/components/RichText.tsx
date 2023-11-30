@@ -244,9 +244,11 @@ export interface FroalaEditorComponentProps {
 //       modelContent = returnedHtml;
 //     }
 
+//   if (this.oldModel !== modelContent) {
 //     this.oldModel = modelContent;
 //     this.props.onModelChange(modelContent);
 //   }
+// }
 
 //   initListeners() {
 //     let self = this;

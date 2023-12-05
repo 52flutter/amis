@@ -773,7 +773,7 @@ export class BaseCRUDPlugin extends BasePlugin {
                       type: 'pagination',
                       behavior: 'Pagination',
                       layout: ['total', 'perPage', 'pager'],
-                      perPageAvailable: [10, 20, 50, 100]
+                      perPageAvailable: [10, 20, 30, 50, 100]
                     }
                   : {
                       type: 'button',

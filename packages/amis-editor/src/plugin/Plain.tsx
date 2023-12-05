@@ -130,7 +130,7 @@ export class PlainPlugin extends BasePlugin {
                     '如果当前字段有值，请不要设置，否则覆盖。支持使用 <code>\\${xxx}</code> 来获取变量，或者用 lodash.template 语法来写模板逻辑。<a target="_blank" href="/amis/zh-CN/docs/concepts/template">详情</a>'
                 }),
                 getSchemaTpl('placeholder', {
-                  pipeIn: defaultValue('-'),
+                  pipeIn: defaultValue('--'),
                   label: '占位符'
                 })
               ]

@@ -34,13 +34,13 @@ export class StatusPlugin extends BasePlugin {
 
   defaultSource = [
     {
-      label: '-',
+      label: '--',
       value: '0',
       icon: 'fail',
       status: 0
     },
     {
-      label: '-',
+      label: '--',
       value: '1',
       icon: 'success',
       status: 1
@@ -275,7 +275,7 @@ export class StatusPlugin extends BasePlugin {
                 }),
                 getSchemaTpl('placeholder', {
                   label: '占位符',
-                  pipeIn: defaultValue('-')
+                  pipeIn: defaultValue('--')
                 })
               ]
             },

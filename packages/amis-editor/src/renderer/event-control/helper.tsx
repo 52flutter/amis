@@ -295,7 +295,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
             return (
               <div>
                 跳转至
-                <span className="variable-left">{info?.args?.url || '-'}</span>
+                <span className="variable-left">{info?.args?.url || '--'}</span>
               </div>
             );
           },
@@ -510,7 +510,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
             return (
               <div>
                 {MSG_TYPES[info?.args?.msgType] || ''}消息：
-                <span className="variable-left">{info?.args?.msg || '-'}</span>
+                <span className="variable-left">{info?.args?.msg || '--'}</span>
               </div>
             );
           },
@@ -631,10 +631,10 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               <div>
                 发送
                 <span className="variable-right variable-left">
-                  {apiInfo?.method || '-'}
+                  {apiInfo?.method || '--'}
                 </span>
                 请求：
-                <span className="variable-left">{apiInfo?.url || '-'}</span>
+                <span className="variable-left">{apiInfo?.url || '--'}</span>
               </div>
             );
           },
@@ -797,7 +797,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   <div>
                     显示
                     <span className="variable-left variable-right">
-                      {info?.rendererLabel || info.componentId || '-'}
+                      {info?.rendererLabel || info.componentId || '--'}
                     </span>
                     组件
                   </div>
@@ -811,7 +811,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   <div>
                     隐藏
                     <span className="variable-left variable-right">
-                      {info?.rendererLabel || info.componentId || '-'}
+                      {info?.rendererLabel || info.componentId || '--'}
                     </span>
                     组件
                   </div>
@@ -825,7 +825,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   <div>
                     组件
                     <span className="variable-left variable-right">
-                      {info?.rendererLabel || info.componentId || '-'}
+                      {info?.rendererLabel || info.componentId || '--'}
                     </span>
                     表达式已配置
                   </div>
@@ -901,7 +901,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   <div>
                     启用
                     <span className="variable-left variable-right">
-                      {info?.rendererLabel || info.componentId || '-'}
+                      {info?.rendererLabel || info.componentId || '--'}
                     </span>
                     组件
                   </div>
@@ -915,7 +915,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   <div>
                     禁用
                     <span className="variable-left variable-right">
-                      {info?.rendererLabel || info.componentId || '-'}
+                      {info?.rendererLabel || info.componentId || '--'}
                     </span>
                     组件
                   </div>
@@ -929,7 +929,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   <div>
                     组件
                     <span className="variable-left variable-right">
-                      {info?.rendererLabel || info.componentId || '-'}
+                      {info?.rendererLabel || info.componentId || '--'}
                     </span>
                     表达式已配置
                   </div>
@@ -1064,7 +1064,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               <div>
                 刷新
                 <span className="variable-left variable-right">
-                  {info?.rendererLabel || info.componentId || '-'}
+                  {info?.rendererLabel || info.componentId || '--'}
                 </span>
                 组件
               </div>
@@ -1267,7 +1267,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   <>
                     设置组件「
                     <span className="variable-left variable-right">
-                      {info?.rendererLabel || info.componentId || '-'}
+                      {info?.rendererLabel || info.componentId || '--'}
                     </span>
                     」的数据
                   </>
@@ -1608,7 +1608,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               <div>
                 提交
                 <span className="variable-left variable-right">
-                  {info?.rendererLabel || info.componentId || '-'}
+                  {info?.rendererLabel || info.componentId || '--'}
                 </span>
                 的数据
               </div>
@@ -1665,7 +1665,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               <div>
                 清空
                 <span className="variable-left variable-right">
-                  {info?.rendererLabel || info.componentId || '-'}
+                  {info?.rendererLabel || info.componentId || '--'}
                 </span>
                 的数据
               </div>
@@ -1683,7 +1683,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               <div>
                 重置
                 <span className="variable-left variable-right">
-                  {info?.rendererLabel || info.componentId || '-'}
+                  {info?.rendererLabel || info.componentId || '--'}
                 </span>
                 的数据
               </div>
@@ -1701,7 +1701,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               <div>
                 校验
                 <span className="variable-left variable-right">
-                  {info?.rendererLabel || info.componentId || '-'}
+                  {info?.rendererLabel || info.componentId || '--'}
                 </span>
                 的数据
               </div>
@@ -1768,7 +1768,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               <div>
                 复制内容：
                 <span className="variable-left">
-                  {info?.args?.content || '-'}
+                  {info?.args?.content || '--'}
                 </span>
               </div>
             );

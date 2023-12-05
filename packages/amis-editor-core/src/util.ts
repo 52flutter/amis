@@ -1370,7 +1370,7 @@ export const getDialogActions = (
                     ? '确认对话框'
                     : '弹窗';
                 dialogActions.push({
-                  label: `${dialog.title || '-'}（${dialogTypeName}）`,
+                  label: `${dialog.title || '--'}（${dialogTypeName}）`,
                   value: dialog.$$id
                 });
               }
@@ -1427,7 +1427,7 @@ export const getDialogActions = (
             // 新建弹窗切换到现有弹窗把自身过滤掉
             if (!filterId || (filterId && filterId !== dialogBodyContent.id)) {
               dialogActions.push({
-                label: `${dialogBodyContent?.title || '-'}（${
+                label: `${dialogBodyContent?.title || '--'}（${
                   dialogBodyMap.get(value)?.title
                 }）`,
                 value: dialogBodyContent.$$id

@@ -100,7 +100,7 @@ export default class ListControl extends React.Component<ListProps, any> {
     reload && reload();
   }
 
-  renderStatic(displayValue = '-') {
+  renderStatic(displayValue = '--') {
     const {
       itemSchema,
       labelField,

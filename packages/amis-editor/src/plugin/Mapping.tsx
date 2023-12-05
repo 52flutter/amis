@@ -108,7 +108,7 @@ export class MappingPlugin extends BasePlugin {
                   }
                 }),
                 getSchemaTpl('placeholder', {
-                  pipeIn: defaultValue('-'),
+                  pipeIn: defaultValue('--'),
                   label: '占位符'
                 })
               ]

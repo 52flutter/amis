@@ -98,7 +98,7 @@ export default class ChartRadiosControl extends React.Component<
     }
   }
 
-  renderStatic(displayValue = '-') {
+  renderStatic(displayValue = '--') {
     this.prevIndex = -1;
     this.highlightIndex = -1;
 

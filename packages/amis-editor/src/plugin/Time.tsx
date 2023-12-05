@@ -93,7 +93,7 @@ export class TimePlugin extends DatePlugin {
                   pipeIn: defaultValue('X')
                 },
                 getSchemaTpl('placeholder', {
-                  pipeIn: defaultValue('-'),
+                  pipeIn: defaultValue('--'),
                   label: '占位符'
                 })
               ]

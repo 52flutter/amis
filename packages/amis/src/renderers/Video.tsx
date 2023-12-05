@@ -745,15 +745,15 @@ export default class Video extends React.Component<VideoProps, VideoState> {
               <p className="m-t-xs">
                 封面{' '}
                 <span className={dimensionClassName}>
-                  {posterInfo.width || '-'} x {posterInfo.height || '-'}
+                  {posterInfo.width || '--'} x {posterInfo.height || '--'}
                 </span>
                 {dimensionClassName ? (
                   <span>
                     {' '}
                     封面尺寸小于{' '}
                     <span className={cx('Text--danger')}>
-                      {minPosterDimension.width || '-'} x{' '}
-                      {minPosterDimension.height || '-'}
+                      {minPosterDimension.width || '--'} x{' '}
+                      {minPosterDimension.height || '--'}
                     </span>
                   </span>
                 ) : null}

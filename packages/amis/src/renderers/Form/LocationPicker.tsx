@@ -133,7 +133,7 @@ export class LocationControl extends React.Component<LocationControlProps> {
     }
   }
 
-  renderStatic(displayValue = '-') {
+  renderStatic(displayValue = '--') {
     const {classnames: cx, value} = this.props;
     const __ = this.props.translate;
 

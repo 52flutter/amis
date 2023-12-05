@@ -420,7 +420,7 @@ export default class ColumnToggler extends React.Component<
                             <Icon icon="drag" className={cx('icon')} />
                           </a>
                           <span className={cx('ColumnToggler-menuItem-label')}>
-                            <span>{column.label || '-'}</span>
+                            <span>{column.label || '--'}</span>
                           </span>
                         </>
                       ) : (
@@ -436,7 +436,7 @@ export default class ColumnToggler extends React.Component<
                             index
                           )}
                         >
-                          <span>{column.label || '-'}</span>
+                          <span>{column.label || '--'}</span>
                         </Checkbox>
                       )}
                     </li>

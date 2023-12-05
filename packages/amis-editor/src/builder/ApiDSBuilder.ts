@@ -1026,7 +1026,8 @@ export class ApiDSBuilder extends DSBuilder<
     return {
       type: field.displayType,
       title: field.label,
-      name: field.name
+      name: field.name,
+      placeholder: '--'
       /** 绑定列值, 似乎不需要 */
       // [f.typeKey || 'value']: `\${f.key}`
     };

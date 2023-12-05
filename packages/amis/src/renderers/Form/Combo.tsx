@@ -1856,7 +1856,7 @@ export default class ComboControl extends React.Component<ComboProps> {
     return <></>;
   }
 
-  renderStatic(displayValue = '-') {
+  renderStatic(displayValue = '--') {
     // 如有 staticSchema 会被拦截渲染schema, 不会走到这里
     return this.props.render(
       'static-input-kv',

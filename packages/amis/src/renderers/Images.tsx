@@ -143,7 +143,7 @@ export class ImagesField extends React.Component<ImagesProps> {
     className: '',
     delimiter: ',',
     defaultImage: imagePlaceholder,
-    placehoder: '-',
+    placehoder: '--',
     thumbMode: 'contain',
     thumbRatio: '1:1'
   };

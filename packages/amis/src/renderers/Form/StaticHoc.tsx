@@ -103,7 +103,7 @@ export function supportStatic<T extends FormControlProps>() {
           className,
           placeholder,
           staticPlaceholder = (
-            <span className="text-muted">{placeholder || '-'}</span>
+            <span className="text-muted">{placeholder || '--'}</span>
           )
         } = props;
 

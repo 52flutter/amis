@@ -259,7 +259,7 @@ export default class ChainedSelectControl extends React.Component<
     reload && reload();
   }
 
-  renderStatic(displayValue = '-') {
+  renderStatic(displayValue = '--') {
     const {
       options = [],
       labelField = 'label',

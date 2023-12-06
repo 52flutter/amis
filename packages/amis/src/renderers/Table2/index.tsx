@@ -1000,16 +1000,6 @@ export default class Table2 extends React.Component<Table2Props, object> {
           });
         }
 
-        // 设置了单元格样式
-        if (column.classNameExpr) {
-          clone.className = (record: any, rowIndex: number) => {
-            const className = filter(column.classNameExpr, {record, rowIndex});
-            return `${className}${
-              column.className ? ` ${column.className}` : ''
-            }`;
-          };
-        }
-
         // 设置了列搜索
         if (column.searchable) {
           clone.filterDropdown = (
@@ -1575,7 +1565,7 @@ export default class Table2 extends React.Component<Table2Props, object> {
 
   @autobind
   async handleSearch(name: string, values: any) {
-    const {data, dispatchEvent, store} = this.props;
+    const {data, dispatchEvent, store, onSearch} = this.props;
 
     const rendererEvent = await dispatchEvent(
       'columnSearch',
@@ -1590,6 +1580,8 @@ export default class Table2 extends React.Component<Table2Props, object> {
     }
 
     store.updateQuery(values);
+
+    onSearch && onSearch({[name]: values[name]});
   }
 
   @autobind

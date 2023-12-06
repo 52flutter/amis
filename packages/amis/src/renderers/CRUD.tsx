@@ -2059,11 +2059,11 @@ export default class CRUD extends React.Component<CRUDProps, any> {
     }
 
     const perPages = mobileUI
-      ? (perPageAvailable || [5, 10, 20, 50, 100]).map((item: any) => ({
+      ? (perPageAvailable || [5, 10, 20, 30, 50, 100]).map((item: any) => ({
           label: item + ' 条/页',
           value: item + ''
         }))
-      : (perPageAvailable || [5, 10, 20, 50, 100]).map((item: any) => ({
+      : (perPageAvailable || [5, 10, 20, 30, 50, 100]).map((item: any) => ({
           label: item,
           value: item + ''
         }));

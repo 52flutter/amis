@@ -40,7 +40,7 @@ export class PaginationPlugin extends BasePlugin {
     total: 1,
     hasNext: false,
     disabled: false,
-    perPageAvailable: [10, 20, 50, 100],
+    perPageAvailable: [10, 20, 30, 50, 100],
     perPage: 10,
     maxButtons: 7
   };

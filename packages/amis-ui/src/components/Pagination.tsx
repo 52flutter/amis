@@ -115,7 +115,7 @@ export class Pagination extends React.Component<
     mode: 'normal' as MODE_TYPE,
     activePage: 1,
     perPage: 10,
-    perPageAvailable: [10, 20, 50, 100]
+    perPageAvailable: [10, 20, 30, 50, 100]
   };
 
   state = {

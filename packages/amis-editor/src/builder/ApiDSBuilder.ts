@@ -1153,7 +1153,7 @@ export class ApiDSBuilder extends DSBuilder<
           behavior: 'Pagination',
           layout: ['total', 'perPage', 'pager'],
           perPage: 10,
-          perPageAvailable: [10, 20, 50, 100],
+          perPageAvailable: [10, 20, 30, 50, 100],
           align: 'right'
         }
       ]

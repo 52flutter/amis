@@ -1530,7 +1530,7 @@ export default class Table2 extends React.Component<Table2Props, object> {
       store,
       classnames: cx,
       data,
-      columnsTogglable,
+      columnsTogglable = false,
       dispatchEvent
     } = this.props;
     actions = Array.isArray(actions) ? actions.concat() : [];

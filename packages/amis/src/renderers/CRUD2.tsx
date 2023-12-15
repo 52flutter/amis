@@ -222,7 +222,7 @@ export interface CRUD2Props
   store: ICRUDStore;
   pickerMode?: boolean; // 选择模式，用做表单中的选择操作
 
-  filterMode?: 1 | 2;
+  filterMode?: 'header-right-withBtn' | 'header-right';
 }
 
 const INNER_EVENTS: Array<CRUDRendererEvent> = [
@@ -1157,7 +1157,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
     );
   }
 
-  renderFilter(filterSchema: SchemaObject[] | SchemaObject) {
+  renderFilter = (filterSchema: SchemaObject[] | SchemaObject) => {
     if (
       !filterSchema ||
       (Array.isArray(filterSchema) && filterSchema.length === 0)
@@ -1174,6 +1174,44 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
     if (filterSchemas.length < 1) {
       return null;
     }
+    if (
+      filterSchemas.length === 1 &&
+      this.props.filterMode?.indexOf('header-right') === 0
+    ) {
+      if (filterSchemas[0]?.type == 'form') {
+        filterSchemas[0].wrapWithPanel = false;
+        if (
+          this.props.filterMode === 'header-right-withBtn' &&
+          Array.isArray(filterSchemas[0]?.body) &&
+          !filterSchemas[0]?.body?.find?.(
+            p => isObject(p) && (p as any).type === 'submit'
+          )
+        ) {
+          filterSchemas[0].body.push({
+            type: 'submit',
+            label: '查询',
+            behavior: 'SimpleQuery',
+            level: 'primary',
+            className: 'cxd-Crud2-filter-submit-button'
+          });
+        }
+        if (
+          this.props.filterMode === 'header-right-withBtn' &&
+          Array.isArray(filterSchemas[0]?.body) &&
+          !filterSchemas[0]?.body?.find?.(
+            p => isObject(p) && (p as any).type === 'reset'
+          )
+        ) {
+          filterSchemas[0].body.push({
+            type: 'reset',
+            label: '',
+            icon: 'fa fa-redo-alt',
+            behavior: 'SimpleQuery',
+            className: 'cxd-Crud2-filter-reset-button'
+          });
+        }
+      }
+    }
 
     return filterSchemas.map((item, index) =>
       this.renderChild(`filter/${index}`, item, {
@@ -1189,7 +1227,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
           })
       })
     );
-  }
+  };
 
   renderSelection(): React.ReactNode {
     const {

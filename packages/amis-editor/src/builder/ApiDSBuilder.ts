@@ -188,7 +188,9 @@ export class ApiDSBuilder extends DSBuilder<
       ) {
         return;
       }
-
+      if (!formItem.label) {
+        formItem.label = formItem.placeholder;
+      }
       const option = isFunction(fieldMapper) ? fieldMapper<T>(formItem) : false;
 
       if (option !== false) {
@@ -985,6 +987,7 @@ export class ApiDSBuilder extends DSBuilder<
           size: 'full',
           required: false,
           behavior: 'SimpleQuery',
+          placeholder: f?.label,
           ...this.appendSchema2InputControl(type)
         };
       }),
@@ -1410,6 +1413,8 @@ export class ApiDSBuilder extends DSBuilder<
       id,
       type: 'crud2',
       mode: 'table2',
+      filterMode: 'header-right-withBtn',
+      columnsTogglable: false,
       dsType: this.key,
       syncLocation: false,
       /** CRUD2使用 selectable + multiple 控制，Table2使用 rowSelection 控制 */

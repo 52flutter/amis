@@ -4,6 +4,42 @@
   &-header {
     display: flex;
     justify-content: space-between;
+
+    .#{$ns}Crud2-filter {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .#{$ns}Form--inline {
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: end;
+      margin: 0;
+
+      .is-placeholder {
+        display: none !important;
+      }
+
+      .#{$ns}Button {
+        margin-bottom: 0;
+        margin-left: 8px;
+        margin-right: 0;
+      }
+    }
+
+    .#{$ns}Form-label {
+      display: none;
+    }
+
+    .#{$ns}Form-item--inline {
+      flex-grow: 0 !important;
+      flex: none;
+      width: auto !important;
+      min-width: 100px;
+      margin-bottom: 0;
+      padding: 0 !important;
+      margin-left: 8px;
+    }
   }
 
   &-selection,

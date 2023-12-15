@@ -719,6 +719,29 @@ export class BaseCRUDPlugin extends BasePlugin {
         });
       }
     });
+    if (collection.length > 0) {
+      collection.push({
+        type: 'select',
+        label: '筛选模式',
+        name: 'filterMode',
+        options: [
+          {
+            label: '独立',
+            value: '独立'
+          },
+          {
+            label: '头部右侧(带按钮)',
+            value: 'header-right-withBtn'
+          },
+          {
+            label: '头部右侧',
+            value: 'header-right'
+          }
+        ],
+
+        multiple: false
+      });
+    }
 
     return collection.length > 0
       ? {

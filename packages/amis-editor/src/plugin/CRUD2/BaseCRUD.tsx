@@ -727,7 +727,7 @@ export class BaseCRUDPlugin extends BasePlugin {
         options: [
           {
             label: '独立',
-            value: '独立'
+            value: 'top'
           },
           {
             label: '头部右侧(带按钮)',

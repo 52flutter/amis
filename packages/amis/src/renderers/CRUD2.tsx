@@ -222,7 +222,7 @@ export interface CRUD2Props
   store: ICRUDStore;
   pickerMode?: boolean; // 选择模式，用做表单中的选择操作
 
-  filterMode?: 'header-right-withBtn' | 'header-right';
+  filterMode?: 'header-right-withBtn' | 'header-right' | 'top';
 }
 
 const INNER_EVENTS: Array<CRUDRendererEvent> = [
@@ -1180,16 +1180,18 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
     ) {
       if (filterSchemas[0]?.type == 'form') {
         filterSchemas[0].wrapWithPanel = false;
+        filterSchemas[0].mode = 'inline';
         if (
           this.props.filterMode === 'header-right-withBtn' &&
           Array.isArray(filterSchemas[0]?.body) &&
           !filterSchemas[0]?.body?.find?.(
-            p => isObject(p) && (p as any).type === 'submit'
+            p => isObject(p) && (p as any).name === 'submit'
           )
         ) {
           filterSchemas[0].body.push({
             type: 'submit',
-            label: '查询',
+            name: 'submit',
+            label: this.props.translate('查询'),
             behavior: 'SimpleQuery',
             level: 'primary',
             className: 'cxd-Crud2-filter-submit-button'
@@ -1199,15 +1201,23 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
           this.props.filterMode === 'header-right-withBtn' &&
           Array.isArray(filterSchemas[0]?.body) &&
           !filterSchemas[0]?.body?.find?.(
-            p => isObject(p) && (p as any).type === 'reset'
+            p => isObject(p) && (p as any).name === 'reset'
           )
         ) {
           filterSchemas[0].body.push({
-            type: 'reset',
-            label: '',
-            icon: 'fa fa-redo-alt',
-            behavior: 'SimpleQuery',
-            className: 'cxd-Crud2-filter-reset-button'
+            type: 'tooltip-wrapper',
+            content: this.props.translate('重置'),
+            // @ts-ignore
+            name: 'reset',
+            body: [
+              {
+                type: 'reset',
+                label: '',
+                behavior: 'SimpleQuery',
+                className: 'cxd-Crud2-filter-reset-button',
+                icon: 'fa fa-redo-alt'
+              }
+            ]
           });
         }
       }
@@ -1347,7 +1357,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
         })}
         style={style}
       >
-        {this.props.filterMode ? (
+        {this.props.filterMode && this.props.filterMode !== 'top' ? (
           <div
             className={cx(
               'Crud2-toolbar',

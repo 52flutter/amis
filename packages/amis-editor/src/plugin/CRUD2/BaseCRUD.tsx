@@ -644,6 +644,14 @@ export class BaseCRUDPlugin extends BasePlugin {
             '开启后会把查询条件数据和分页信息同步到地址栏中，页面中出现多个时，建议只保留一个同步地址栏，否则会相互影响。'
           ),
           pipeIn: defaultValue(false)
+        }),
+        getSchemaTpl('switch', {
+          name: 'canAccessSuperData',
+          label: tipedLabel(
+            '自动填充数据域同名变量',
+            '默认组件是获取不到完整数据链中的数据的，如果想使组件获取完整数据链，请打开此配置'
+          ),
+          pipeIn: defaultValue(false)
         })
       ]
     };

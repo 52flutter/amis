@@ -534,6 +534,7 @@ export class CRUDPlugin extends BasePlugin {
           type: 'button',
           label: '格式校验并自动生成列配置',
           className: 'm-t-xs m-b-xs',
+          visibleOn: '!!this.api.url',
           onClick: async (e: Event, props: any) => {
             const data = props.data;
             const schemaFilter = getEnv(
@@ -1578,6 +1579,10 @@ export class CRUDPlugin extends BasePlugin {
                 type: 'select',
                 name: 'type',
                 columnClassName: 'w-ssm',
+                overlay: {
+                  align: 'left',
+                  width: 150
+                },
                 options: [
                   {
                     value: 'bulk-actions',
@@ -1629,12 +1634,12 @@ export class CRUDPlugin extends BasePlugin {
                     value: 'drag-toggler',
                     label: '拖拽切换'
                   },
-
-                  {
-                    value: 'check-all',
-                    label: '全选',
-                    hiddenOn: '!this.mode || this.mode === "table"'
-                  },
+                  // list和cards自带全选了，没必要再加了
+                  // {
+                  //   value: 'check-all',
+                  //   label: '全选',
+                  //   hiddenOn: '!this.mode || this.mode === "table"'
+                  // },
 
                   {
                     value: 'tpl',
@@ -1760,6 +1765,10 @@ export class CRUDPlugin extends BasePlugin {
                 type: 'select',
                 name: 'type',
                 columnClassName: 'w-ssm',
+                overlay: {
+                  align: 'left',
+                  width: 150
+                },
                 options: [
                   {
                     value: 'bulk-actions',
@@ -2343,16 +2352,20 @@ export class CRUDPlugin extends BasePlugin {
 
     // 保底
     fields.length ||
-      fields.concat([
-        {
-          name: 'a',
-          label: 'A'
-        },
-        {
-          name: 'b',
-          label: 'B'
-        }
-      ]);
+      fields.push(
+        ...[
+          {
+            type: 'text',
+            name: schema.labelField || 'label',
+            label: 'label'
+          },
+          {
+            type: 'text',
+            name: schema.valueField || 'value',
+            label: 'value'
+          }
+        ]
+      );
 
     if (to === 'table') {
       return fields.concat({

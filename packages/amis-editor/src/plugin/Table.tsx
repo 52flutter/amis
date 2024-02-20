@@ -515,6 +515,7 @@ export class TablePlugin extends BasePlugin {
                 formType: 'extend',
                 label: '头部',
                 name: 'showHeader',
+                pipeIn: (value: any) => value ?? true,
                 form: {
                   body: [
                     {
@@ -538,6 +539,7 @@ export class TablePlugin extends BasePlugin {
                 formType: 'extend',
                 label: '底部',
                 name: 'showFooter',
+                pipeIn: (value: any) => value ?? true,
                 form: {
                   body: [
                     {
@@ -748,7 +750,7 @@ export class TablePlugin extends BasePlugin {
       }));
     } else {
       // 只取10条预览，否则太多卡顿
-      props.value = arr.slice(0, 10);
+      props.value = arr.slice(0, 3);
     }
 
     // 编辑模式，不允许表格调整宽度
@@ -852,13 +854,16 @@ export class TablePlugin extends BasePlugin {
         const current = items.shift() as EditorNodeType;
         const schema = current.schema;
         if (schema.name) {
-          itemsSchema.properties[schema.name] =
-            await current.info.plugin.buildDataSchemas?.(
-              current,
-              region,
-              trigger,
-              node
-            );
+          const tmpSchema = await current.info.plugin.buildDataSchemas?.(
+            current,
+            region,
+            trigger,
+            node
+          );
+          itemsSchema.properties[schema.name] = {
+            ...tmpSchema,
+            ...(tmpSchema?.$id ? {} : {$id: `${current!.id}-${current!.type}`})
+          };
         }
       }
       index++;

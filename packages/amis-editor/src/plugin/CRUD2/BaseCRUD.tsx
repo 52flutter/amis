@@ -1161,7 +1161,11 @@ export class BaseCRUDPlugin extends BasePlugin {
     }
   }
 
-  async buildDataSchemas(node: EditorNodeType, region?: EditorNodeType) {
+  async buildDataSchemas(
+    node: EditorNodeType,
+    region?: EditorNodeType,
+    trigger?: EditorNodeType
+  ) {
     const child: EditorNodeType = node.children.find(
       item => !!~['table2', 'cards', 'list'].indexOf(item.type)
     );
@@ -1170,17 +1174,24 @@ export class BaseCRUDPlugin extends BasePlugin {
       return;
     }
 
-    const childDataSchema = await child.info.plugin.buildDataSchemas(
+    const tmpSchema = await child.info.plugin.buildDataSchemas?.(
       child,
-      region
+      region,
+      trigger,
+      node
     );
+
+    const childDataSchema = {
+      ...tmpSchema,
+      ...(tmpSchema?.$id ? {} : {$id: `${child.id}-${child.type}`})
+    };
+
     const items =
       childDataSchema?.properties?.rows ?? childDataSchema?.properties?.items;
     const schema: any = {
       $id: 'crud2',
       type: 'object',
       properties: {
-        ...items?.properties,
         items: {
           ...items,
           title: '全部数据'

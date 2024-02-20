@@ -24,6 +24,7 @@ interface ContextMenuProps {
 }
 
 export type MenuItem = {
+  id?: string;
   label: string;
   icon?: string;
   disabled?: boolean;
@@ -42,7 +43,7 @@ interface ContextMenuState {
   x: number;
   y: number;
   align?: 'left' | 'right';
-  onClose?: () => void;
+  onClose?: (ctx: ContextMenu) => void;
 }
 
 export class ContextMenu extends React.Component<
@@ -111,7 +112,7 @@ export class ContextMenu extends React.Component<
   openContextMenus(
     info: {x: number; y: number},
     menus: Array<MenuItem>,
-    onClose?: () => void
+    onClose?: (ctx: ContextMenu) => void
   ) {
     if (this.state.isOpened) {
       const {x, y} = this.state;
@@ -153,7 +154,9 @@ export class ContextMenu extends React.Component<
         y: -99999,
         menus: []
       },
-      onClose
+      () => {
+        onClose?.(this);
+      }
     );
   }
 
@@ -185,7 +188,7 @@ export class ContextMenu extends React.Component<
         },
         () => {
           item.onSelect?.(item.data);
-          onClose?.();
+          onClose?.(this);
         }
       );
   }
@@ -318,7 +321,7 @@ export default ThemedContextMenu;
 export async function openContextMenus(
   info: Event | {x: number; y: number},
   menus: Array<MenuItem | MenuDivider>,
-  onClose?: () => void
+  onClose?: (ctx: ContextMenu) => void
 ) {
   return ContextMenu.getInstance().then(instance =>
     instance.openContextMenus(info, menus, onClose)

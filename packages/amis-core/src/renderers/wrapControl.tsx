@@ -241,41 +241,7 @@ export function wrapControl<
               model.changeTmpValue(propValue, 'controlled');
               model.setIsControlled(true);
             } else {
-              const isExp = isExpression(value);
-
-              if (isExp) {
-                model.changeTmpValue(
-                  FormulaExec['formula'](value, data), // 对组件默认值进行运算
-                  'formulaChanged'
-                );
-              } else {
-                let initialValue = model.extraName
-                  ? [
-                      store?.getValueByName(
-                        model.name,
-                        form?.canAccessSuperData
-                      ),
-                      store?.getValueByName(
-                        model.extraName,
-                        form?.canAccessSuperData
-                      )
-                    ]
-                  : store?.getValueByName(model.name, form?.canAccessSuperData);
-
-                if (
-                  model.extraName &&
-                  initialValue.every((item: any) => item === undefined)
-                ) {
-                  initialValue = undefined;
-                }
-
-                model.changeTmpValue(
-                  initialValue ?? replaceExpression(value),
-                  typeof initialValue !== 'undefined'
-                    ? 'initialValue'
-                    : 'defaultValue'
-                );
-              }
+              this.setInitialValue(value);
             }
 
             if (
@@ -320,9 +286,7 @@ export function wrapControl<
             } = this.props;
 
             // 提交前先把之前的 lazyEmit 执行一下。
-            this.hook3 = () => {
-              this.lazyEmitChange.flush();
-            };
+            this.hook3 = () => this.lazyEmitChange.flush();
             addHook?.(this.hook3, 'flush');
 
             const formItem = this.model as IFormItemStore;
@@ -354,6 +318,7 @@ export function wrapControl<
 
             changedEffect(
               [
+                'name',
                 'id',
                 'validations',
                 'validationErrors',
@@ -387,6 +352,10 @@ export function wrapControl<
                   isValueSchemaExp: isExpression(props.$schema.value),
                   inputGroupControl: props?.inputGroupControl
                 } as any);
+
+                if (changes.hasOwnProperty('name')) {
+                  this.setInitialValue(this.props.$schema.value);
+                }
               }
             );
 
@@ -495,6 +464,40 @@ export function wrapControl<
             this.lazyEmitChange.cancel();
             this.reaction?.();
             this.disposeModel();
+          }
+
+          setInitialValue(value: any) {
+            const model = this.model!;
+            const {formStore: form, data} = this.props;
+            const isExp = isExpression(value);
+
+            if (isExp) {
+              model.changeTmpValue(
+                FormulaExec['formula'](value, data), // 对组件默认值进行运算
+                'formulaChanged'
+              );
+            } else {
+              let initialValue = model.extraName
+                ? [
+                    getVariable(data, model.name, form?.canAccessSuperData),
+                    getVariable(data, model.extraName, form?.canAccessSuperData)
+                  ]
+                : getVariable(data, model.name, form?.canAccessSuperData);
+
+              if (
+                model.extraName &&
+                initialValue.every((item: any) => item === undefined)
+              ) {
+                initialValue = undefined;
+              }
+
+              model.changeTmpValue(
+                initialValue ?? replaceExpression(value),
+                typeof initialValue !== 'undefined'
+                  ? 'initialValue'
+                  : 'defaultValue'
+              );
+            }
           }
 
           disposeModel() {
@@ -693,6 +696,7 @@ export function wrapControl<
             if (!this.model) {
               return;
             }
+
             const model = this.model;
             const value = this.model.tmpValue;
             const oldValue = model.extraName
@@ -794,15 +798,16 @@ export function wrapControl<
           }
 
           getValue() {
-            const {formStore: data, $schema: control} = this.props;
+            const {formStore, data, $schema: control} = this.props;
             let value: any = this.model ? this.model.tmpValue : control.value;
 
             if (control.pipeIn) {
               value = callStrFunction.call(
                 this,
                 control.pipeIn,
-                ['value', 'data'],
+                ['value', 'store', 'data'],
                 value,
+                formStore,
                 data
               );
             }

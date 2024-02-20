@@ -15,6 +15,7 @@ import {ThemeProps, themeable, isNumeric, autobind, ucFirst} from 'amis-core';
 export type ValueType = string | number;
 
 export interface NumberProps extends ThemeProps {
+  name?: string;
   placeholder?: string;
   max?: ValueType;
   min?: ValueType;
@@ -240,7 +241,16 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
   }
 
   @autobind
-  handleEnhanceModeChange(action: 'add' | 'subtract'): void {
+  handleClick(e: React.SyntheticEvent<HTMLElement>) {
+    e.stopPropagation();
+  }
+
+  @autobind
+  handleEnhanceModeChange(
+    action: 'add' | 'subtract',
+    e: React.MouseEvent
+  ): void {
+    e.stopPropagation();
     const {value, step = 1, disabled, readOnly, precision} = this.props;
     // value为undefined会导致溢出错误
     let val = value || 0;
@@ -308,7 +318,8 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
       inputRef,
       keyboard,
       inputControlClassName,
-      mobileUI
+      mobileUI,
+      name
     } = this.props;
     const precisionProps: any = {
       precision: NumberInput.normalizePrecision(precision, step)
@@ -316,6 +327,7 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
 
     return (
       <InputNumber
+        name={name}
         className={cx(
           className,
           showSteps === false ? 'no-steps' : '',
@@ -342,6 +354,7 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
         disabled={disabled}
         placeholder={placeholder}
         onFocus={this.handleFocus}
+        onClick={this.handleClick}
         onBlur={this.handleBlur}
         stringMode={this.isBig ? true : false}
         keyboard={keyboard}
@@ -386,7 +399,7 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
                 disabled ? 'Number--enhance-border-disabled' : '',
                 readOnly ? 'Number--enhance-border-readOnly' : ''
               )}
-              onClick={() => this.handleEnhanceModeChange('subtract')}
+              onClick={e => this.handleEnhanceModeChange('subtract', e)}
             >
               <Icon
                 icon="minus"
@@ -403,7 +416,7 @@ export class NumberInput extends React.Component<NumberProps, NumberState> {
                 disabled ? 'Number--enhance-border-disabled' : '',
                 readOnly ? 'Number--enhance-border-readOnly' : ''
               )}
-              onClick={() => this.handleEnhanceModeChange('add')}
+              onClick={e => this.handleEnhanceModeChange('add', e)}
             >
               <Icon
                 icon="plus"

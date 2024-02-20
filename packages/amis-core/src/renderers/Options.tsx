@@ -54,7 +54,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import {normalizeOptions} from '../utils/normalizeOptions';
 import {optionValueCompare} from '../utils/optionValueCompare';
 import type {Option} from '../types';
-import {resolveEventData} from '../utils';
+import {deleteVariable, resolveEventData} from '../utils';
 
 export {Option};
 
@@ -203,6 +203,12 @@ export interface FormOptionsControl extends FormBaseControl {
   autoFill?: {
     [propName: string]: string;
   };
+
+  /**
+   * @default fillIfNotSet
+   * 初始化时是否把其他字段同步到表单内部。
+   */
+  initAutoFill?: boolean | 'fillIfNotSet';
 }
 
 export interface OptionsBasicConfig extends FormItemBasicConfig {
@@ -303,6 +309,7 @@ export function registerOptionsControl(config: OptionsConfig) {
       placeholder: 'Select.placeholder',
       resetValue: '',
       deleteConfirmText: 'deleteConfirm',
+      initAutoFill: 'fillIfNotSet',
       ...Control.defaultProps
     };
     static propsList: any = (Control as any).propsList
@@ -314,6 +321,7 @@ export function registerOptionsControl(config: OptionsConfig) {
 
     input: any;
     mounted = false;
+    initedFilled = false;
 
     constructor(props: OptionsProps) {
       super(props);
@@ -356,16 +364,27 @@ export function registerOptionsControl(config: OptionsConfig) {
               JSON.stringify(formItem.getSelectedOptions(formItem.tmpValue)),
             () =>
               this.mounted &&
+              this.initedFilled &&
               this.syncAutoFill(formItem.getSelectedOptions(formItem.tmpValue))
           )
         );
 
-        if (
-          options &&
-          formItem.tmpValue &&
-          formItem.getSelectedOptions(formItem.tmpValue).length
-        ) {
-          this.syncAutoFill(formItem.getSelectedOptions(formItem.tmpValue));
+        if (formInited || !addHook) {
+          this.initedFilled = true;
+          this.props.initAutoFill !== false &&
+            this.syncAutoFill(
+              formItem.getSelectedOptions(formItem.tmpValue),
+              this.props.initAutoFill === 'fillIfNotSet'
+            );
+        } else if (addHook) {
+          addHook(() => {
+            this.initedFilled = true;
+            this.props.initAutoFill !== false &&
+              this.syncAutoFill(
+                formItem.getSelectedOptions(formItem.tmpValue),
+                this.props.initAutoFill === 'fillIfNotSet'
+              );
+          }, 'init');
         }
 
         // 默认全选。这里会和默认值\回填值逻辑冲突，所以如果有配置source则不执行默认全选
@@ -492,13 +511,27 @@ export function registerOptionsControl(config: OptionsConfig) {
       this.toDispose = [];
     }
 
-    async dispatchOptionEvent(eventName: string, eventData: any = '') {
+    // 不推荐使用，缺少组件值
+    async oldDispatchOptionEvent(eventName: string, eventData: any = '') {
       const {dispatchEvent, options} = this.props;
       const rendererEvent = await dispatchEvent(
         eventName,
         resolveEventData(
           this.props,
           {value: eventData, options, items: options} // 为了保持名字统一
+        )
+      );
+      // 返回阻塞标识
+      return !!rendererEvent?.prevented;
+    }
+
+    async dispatchOptionEvent(eventName: string, eventData: any = '') {
+      const {dispatchEvent, options, value} = this.props;
+      const rendererEvent = await dispatchEvent(
+        eventName,
+        resolveEventData(
+          this.props,
+          {value, options, items: options, ...eventData} // 为了保持名字统一
         )
       );
       // 返回阻塞标识
@@ -516,7 +549,7 @@ export function registerOptionsControl(config: OptionsConfig) {
       }
     }
 
-    syncAutoFill(selectedOptions: Array<any>) {
+    syncAutoFill(selectedOptions: Array<any>, skipIfExits = false) {
       const {autoFill, multiple, onBulkChange, data} = this.props;
       const formItem = this.props.formItem as IFormItemStore;
       // 参照录入｜自动填充
@@ -565,13 +598,21 @@ export function registerOptionsControl(config: OptionsConfig) {
 
         Object.keys(autoFill).forEach(key => {
           const keys = keyToPath(key);
+          let value = getVariable(toSync, key);
+
+          if (skipIfExits) {
+            const originValue = getVariable(data, key);
+            if (typeof originValue !== 'undefined') {
+              value = originValue;
+            }
+          }
+
+          setVariable(result, key, value);
 
           // 如果左边的 key 是一个路径
           // 这里不希望直接把原始对象都给覆盖没了
           // 而是保留原始的对象，只修改指定的属性
           if (keys.length > 1 && isPlainObject(tmpData[keys[0]])) {
-            const value = getVariable(toSync, key);
-
             // 存在情况：依次更新同一子路径的多个key，eg: a.b.c1 和 a.b.c2，所以需要同步更新data
             setVariable(tmpData, key, value);
             result[keys[0]] = tmpData[keys[0]];
@@ -653,7 +694,9 @@ export function registerOptionsControl(config: OptionsConfig) {
         value
       );
 
-      const isPrevented = await this.dispatchOptionEvent('change', newValue);
+      const isPrevented = await this.dispatchOptionEvent('change', {
+        value: newValue
+      });
       isPrevented ||
         (onChange && onChange(newValue, submitOnChange, changeImmediately));
     }
@@ -729,7 +772,9 @@ export function registerOptionsControl(config: OptionsConfig) {
           ? []
           : formItem.filteredOptions.concat();
       const newValue = this.formatValueArray(valueArray);
-      const isPrevented = await this.dispatchOptionEvent('change', newValue);
+      const isPrevented = await this.dispatchOptionEvent('change', {
+        value: newValue
+      });
       isPrevented || (onChange && onChange(newValue));
     }
 
@@ -844,8 +889,13 @@ export function registerOptionsControl(config: OptionsConfig) {
         api,
         createObject(data, option)
       );
+
       // 触发事件通知,加载完成
-      this.dispatchOptionEvent('loadFinished', json);
+      // 废弃，不推荐使用
+      this.oldDispatchOptionEvent('loadFinished', json);
+
+      // 避免产生breakchange，增加新事件名，用来更正之前的设计问题
+      this.dispatchOptionEvent('deferLoadFinished', {result: json});
     }
 
     @autobind
@@ -1002,6 +1052,7 @@ export function registerOptionsControl(config: OptionsConfig) {
           : value
       );
 
+      let customAddPrevent = false;
       let result: any = skipForm
         ? ctx
         : await onOpenDialog(
@@ -1024,11 +1075,41 @@ export function registerOptionsControl(config: OptionsConfig) {
                     value: parent
                   },
                   ...(addControls || [])
-                ]
+                ],
+                onSubmit: async (payload: any) => {
+                  const labelKey = labelField || 'label';
+                  const valueKey = valueField || 'value';
+                  // 派发确认添加事件
+                  customAddPrevent = await this.dispatchOptionEvent(
+                    'addConfirm',
+                    {
+                      item: {
+                        [labelKey]: payload[labelKey],
+                        [valueKey]: payload[valueKey] ?? payload[labelKey]
+                      }
+                    }
+                  );
+
+                  return !customAddPrevent;
+                }
               }
             },
             ctx
           );
+
+      // 派发确认添加事件
+      if (skipForm) {
+        // 避免产生breakchange，增加新事件名，用来更正之前的设计问题
+        const prevent = await this.dispatchOptionEvent('addConfirm', {
+          item: result
+        });
+
+        if (prevent) {
+          return;
+        }
+      } else if (customAddPrevent) {
+        return;
+      }
 
       // 单独发请求
       if (skipForm && addApi) {
@@ -1068,10 +1149,12 @@ export function registerOptionsControl(config: OptionsConfig) {
         };
       }
       // 触发事件通知
-      const isPrevented = await this.dispatchOptionEvent('add', {
+      // 废弃，不推荐使用
+      const isPrevented = await this.oldDispatchOptionEvent('add', {
         ...result,
         idx
       });
+
       if (isPrevented) {
         return;
       }
@@ -1111,6 +1194,7 @@ export function registerOptionsControl(config: OptionsConfig) {
         editDialog,
         disabled,
         labelField,
+        valueField,
         onOpenDialog,
         editApi,
         editInitApi,
@@ -1137,6 +1221,7 @@ export function registerOptionsControl(config: OptionsConfig) {
         ];
       }
 
+      let customEditPrevent = false;
       let result = skipForm
         ? value
         : await onOpenDialog(
@@ -1150,11 +1235,40 @@ export function registerOptionsControl(config: OptionsConfig) {
                 type: 'form',
                 initApi: editInitApi,
                 api: editApi,
-                controls: editControls
+                controls: editControls,
+                onSubmit: async (payload: any) => {
+                  const labelKey = labelField || 'label';
+                  const valueKey = valueField || 'value';
+                  // 避免产生breakchange，增加新事件名，用来更正之前的设计问题
+                  customEditPrevent = await this.dispatchOptionEvent(
+                    'editConfirm',
+                    {
+                      item: {
+                        [labelKey]: payload[labelKey],
+                        [valueKey]: payload[valueKey] ?? payload[labelKey]
+                      }
+                    }
+                  );
+
+                  return !customEditPrevent;
+                }
               }
             },
             createObject(data, value)
           );
+
+      if (skipForm) {
+        // 避免产生breakchange，增加新事件名，用来更正之前的设计问题
+        const prevent = await this.dispatchOptionEvent('editConfirm', {
+          item: result
+        });
+
+        if (prevent) {
+          return;
+        }
+      } else if (customEditPrevent) {
+        return;
+      }
 
       // 单独发请求
       if (skipForm && editApi) {
@@ -1189,9 +1303,10 @@ export function registerOptionsControl(config: OptionsConfig) {
       if (!result) {
         return;
       }
-
       // 触发事件通知
-      const isPrevented = await this.dispatchOptionEvent('edit', result);
+      // 废弃，不推荐使用
+      const isPrevented = await this.oldDispatchOptionEvent('edit', result);
+
       if (isPrevented) {
         return;
       }
@@ -1244,8 +1359,20 @@ export function registerOptionsControl(config: OptionsConfig) {
       }
 
       // 触发事件通知
-      const isPrevented = await this.dispatchOptionEvent('delete', ctx);
+      // 废弃，不推荐使用
+      const isPrevented = await this.oldDispatchOptionEvent('delete', ctx);
       if (isPrevented) {
+        return;
+      }
+
+      // 避免产生breakchange，增加新事件名，用来更正之前的设计问题
+      const delConfirmPrevent = await this.dispatchOptionEvent(
+        'deleteConfirm',
+        {
+          item: value
+        }
+      );
+      if (delConfirmPrevent) {
         return;
       }
 

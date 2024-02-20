@@ -1,6 +1,6 @@
 import React from 'react';
 import {findDOMNode} from 'react-dom';
-import {Renderer, RendererProps, buildStyle} from 'amis-core';
+import {Renderer, RendererProps, buildStyle, getPropValue} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
 import {Button, Spinner, SpinnerExtraProps} from 'amis-ui';
 import {ListStore, IListStore} from 'amis-core';
@@ -103,6 +103,11 @@ export interface CardsSchema extends BaseSchema, SpinnerExtraProps {
    * 是否固顶
    */
   affixHeader?: boolean;
+
+  /**
+   * 是否固底
+   */
+  affixFooter?: boolean;
 
   /**
    * 顶部区域
@@ -261,13 +266,14 @@ export default class Cards extends React.Component<GridProps, object> {
 
   static syncItems(store: IListStore, props: GridProps, prevProps?: GridProps) {
     const source = props.source;
-    const value = props.value || props.items;
+    const value = getPropValue(props, (props: GridProps) => props.items);
     let items: Array<object> = [];
     let updateItems = false;
 
     if (
       Array.isArray(value) &&
-      (!prevProps || (prevProps.value || prevProps.items) !== value)
+      (!prevProps ||
+        getPropValue(prevProps, (props: GridProps) => props.items) !== value)
     ) {
       items = value;
       updateItems = true;
@@ -555,7 +561,12 @@ export default class Cards extends React.Component<GridProps, object> {
 
           const parent = e.to as HTMLElement;
           if (e.oldIndex < parent.childNodes.length - 1) {
-            parent.insertBefore(e.item, parent.childNodes[e.oldIndex]);
+            parent.insertBefore(
+              e.item,
+              parent.childNodes[
+                e.oldIndex > e.newIndex ? e.oldIndex + 1 : e.oldIndex
+              ]
+            );
           } else {
             parent.appendChild(e.item);
           }
@@ -735,7 +746,8 @@ export default class Cards extends React.Component<GridProps, object> {
       render,
       showFooter,
       store,
-      classnames: cx
+      classnames: cx,
+      affixFooter
     } = this.props;
 
     if (showFooter === false) {
@@ -755,18 +767,33 @@ export default class Cards extends React.Component<GridProps, object> {
       : null;
     const actions = this.renderActions('footer');
 
+    const footerNode = footer ? (
+      <div
+        className={cx(
+          'Cards-footer',
+          footerClassName,
+          affixFooter ? 'Cards-footer--affix' : ''
+        )}
+        key="footer"
+      >
+        {render('footer', footer)}
+      </div>
+    ) : null;
+
     const toolbarNode =
       actions || child ? (
-        <div className={cx('Cards-toolbar')} key="footer-toolbar">
+        <div
+          className={cx(
+            'Cards-toolbar',
+            !footerNode && affixFooter ? 'Cards-footToolbar--affix' : ''
+          )}
+          key="footer-toolbar"
+        >
           {actions}
           {child}
         </div>
       ) : null;
-    const footerNode = footer ? (
-      <div className={cx('Cards-footer', footerClassName)} key="footer">
-        {render('footer', footer)}
-      </div>
-    ) : null;
+
     return footerNode && toolbarNode
       ? [toolbarNode, footerNode]
       : footerNode || toolbarNode || null;
@@ -999,8 +1026,18 @@ export default class Cards extends React.Component<GridProps, object> {
           {
             'Cards--unsaved': !!store.modified || !!store.moved
           },
-          setThemeClassName('baseControlClassName', id, themeCss),
-          setThemeClassName('wrapperCustomStyle', id, wrapperCustomStyle)
+          setThemeClassName({
+            ...this.props,
+            name: 'baseControlClassName',
+            id,
+            themeCss
+          }),
+          setThemeClassName({
+            ...this.props,
+            name: 'wrapperCustomStyle',
+            id,
+            themeCss: wrapperCustomStyle
+          })
         )}
         style={buildStyle(style, data)}
       >
@@ -1035,6 +1072,7 @@ export default class Cards extends React.Component<GridProps, object> {
         <Spinner loadingConfig={loadingConfig} overlay show={loading} />
 
         <CustomStyle
+          {...this.props}
           config={{
             wrapperCustomStyle,
             id,

@@ -302,7 +302,6 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
           schema: getArgsWrapper([
             {
               type: 'wrapper',
-              className: 'p-none',
               body: [
                 getSchemaTpl('textareaFormulaControl', {
                   name: 'url',
@@ -456,7 +455,6 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
           description: '关闭当前弹窗' // 或者关闭指定弹窗
           // schema: getArgsWrapper({
           //   type: 'wrapper',
-          //   className: 'p-none',
           //   body: [
           //     {
           //       type: 'radios',
@@ -516,7 +514,6 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
           },
           schema: getArgsWrapper({
             type: 'wrapper',
-            className: 'p-none',
             body: [
               {
                 type: 'button-group-select',
@@ -750,7 +747,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
           // innerArgs: ['api'],
           schema: {
             type: 'wrapper',
-            style: {padding: '0'},
+            className: 'p-none',
             body: [
               // getArgsWrapper(
               //   getSchemaTpl('apiControl', {
@@ -1075,7 +1072,6 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
             {
               type: 'wrapper',
               size: 'sm',
-              visibleOn: 'data.componentId === "customCmptId"',
               body: [
                 ...renderCmptSelect(
                   '目标组件',
@@ -1087,23 +1083,6 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                     form.setValueByName('__reloadParam', []);
                   },
                   true
-                )
-              ]
-            },
-            {
-              type: 'wrapper',
-              size: 'sm',
-              visibleOn: 'data.componentId !== "customCmptId"',
-              body: [
-                ...renderCmptSelect(
-                  '目标组件',
-                  true,
-                  (value: string, oldVal: any, data: any, form: any) => {
-                    form.setValueByName('args.resetPage', true);
-                    form.setValueByName('__addParam', false);
-                    form.setValueByName('__containerType', 'all');
-                    form.setValueByName('__reloadParam', []);
-                  }
                 )
               ]
             },
@@ -1293,7 +1272,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   mode: 'horizontal',
                   options: [
                     {label: '组件变量', value: 'cmpt'},
-                    {label: '页面变量', value: 'page'},
+                    {label: '页面参数', value: 'page'},
                     {label: '内存变量', value: 'app'}
                   ],
                   value: /^appVariables/.test(path) // 只需要初始化时更新value
@@ -1321,8 +1300,8 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               body: [
                 {
                   type: 'wrapper',
-                  size: 'sm',
                   visibleOn: 'data.componentId === "customCmptId"',
+                  className: 'p-none mb-6',
                   body: [
                     ...renderCmptActionSelect(
                       '目标组件',
@@ -1338,7 +1317,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 {
                   type: 'wrapper',
                   visibleOn: 'data.componentId !== "customCmptId"',
-                  size: 'sm',
+                  className: 'p-none mb-6',
                   body: [
                     ...renderCmptActionSelect(
                       '目标组件',
@@ -1373,7 +1352,6 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 ),
                 getArgsWrapper({
                   type: 'wrapper',
-                  className: 'p-none',
                   body: [
                     {
                       type: 'radios',
@@ -1440,7 +1418,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                       size: 'lg',
                       placeholder: '请输入待更新序号',
                       visibleOn: `(data.__rendererName === 'input-table' || data.__rendererName === 'combo')
-                      && data.__comboType === 'appoint'`
+                    && data.__comboType === 'appoint'`
                     },
                     {
                       type: 'combo',
@@ -1517,7 +1495,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                         }
                       ],
                       visibleOn: `(data.__rendererName === 'combo' || data.__rendererName === 'input-table')
-                      && data.__comboType === 'all'`
+                    && data.__comboType === 'all'`
                     },
                     getSchemaTpl('formulaControl', {
                       name: '__valueInput',
@@ -1541,7 +1519,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 })
               ]
             },
-            // 页面变量
+            // 页面参数
             {
               type: 'container',
               visibleOn: '__actionSubType === "page"',
@@ -1549,12 +1527,14 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 getArgsWrapper([
                   {
                     type: 'wrapper',
-                    className: 'p-none',
                     body: [
                       getCustomNodeTreeSelectSchema({
-                        label: '页面变量',
-                        rootLabel: '页面变量',
-                        options: pageVariableOptions
+                        label: '页面参数',
+                        rootLabel: '页面参数',
+                        options: pageVariableOptions,
+                        horizontal: {
+                          leftFixed: true
+                        }
                       }),
                       getSchemaTpl('formulaControl', {
                         name: 'value',
@@ -1563,7 +1543,10 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                         size: 'lg',
                         mode: 'horizontal',
                         required: true,
-                        placeholder: '请输入变量值'
+                        placeholder: '请输入变量值',
+                        horizontal: {
+                          leftFixed: true
+                        }
                       })
                     ]
                   }
@@ -1578,10 +1561,12 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 getArgsWrapper([
                   {
                     type: 'wrapper',
-                    className: 'p-none',
                     body: [
                       getCustomNodeTreeSelectSchema({
-                        options: variableOptions
+                        options: variableOptions,
+                        horizontal: {
+                          leftFixed: true
+                        }
                       }),
                       getSchemaTpl('formulaControl', {
                         name: 'value',
@@ -1590,7 +1575,10 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                         size: 'lg',
                         mode: 'horizontal',
                         required: true,
-                        placeholder: '请输入变量值'
+                        placeholder: '请输入变量值',
+                        horizontal: {
+                          leftFixed: true
+                        }
                       })
                     ]
                   }
@@ -1824,7 +1812,6 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
           },
           schema: getArgsWrapper({
             type: 'wrapper',
-            className: 'p-none',
             body: [
               getSchemaTpl('textareaFormulaControl', {
                 name: 'content',
@@ -1940,52 +1927,34 @@ export const renderCmptSelect = (
   required: boolean,
   onChange?: (value: string, oldVal: any, data: any, form: any) => void,
   hideAutoFill?: boolean
-) => {
-  if (hideAutoFill) {
-    return [
-      {
-        type: 'tree-select',
-        name: 'componentId',
-        label: componentLabel || '选择组件',
-        showIcon: false,
-        searchable: true,
-        required,
-        selfDisabledAffectChildren: false,
-        size: 'lg',
-        source: '${__cmptTreeSource}',
-        mode: 'horizontal',
-        onChange: async (value: string, oldVal: any, data: any, form: any) => {
-          onChange?.(value, oldVal, data, form);
-        }
-      }
-    ];
-  } else {
-    return [
-      {
-        type: 'tree-select',
-        name: 'componentId',
-        label: componentLabel || '选择组件',
-        showIcon: false,
-        searchable: true,
-        required,
-        selfDisabledAffectChildren: false,
-        size: 'lg',
-        source: '${__cmptTreeSource}',
-        mode: 'horizontal',
-        autoFill: {
-          __rendererLabel: '${label}',
-          __rendererName: '${type}',
-          __nodeId: '${id}',
-          __nodeSchema: '${schema}',
-          __isScopeContainer: '${isScopeContainer}'
-        },
-        onChange: async (value: string, oldVal: any, data: any, form: any) => {
-          onChange?.(value, oldVal, data, form);
-        }
-      }
-    ];
+) => [
+  {
+    type: 'tree-select',
+    name: 'componentId',
+    label: componentLabel || '选择组件',
+    showIcon: false,
+    searchable: true,
+    required,
+    selfDisabledAffectChildren: false,
+    size: 'lg',
+    source: '${__cmptTreeSource}',
+    mode: 'horizontal',
+    autoFill: {
+      __isScopeContainer: '${isScopeContainer}',
+      ...(hideAutoFill
+        ? {}
+        : {
+            __rendererLabel: '${label}',
+            __rendererName: '${type}',
+            __nodeId: '${id}',
+            __nodeSchema: '${schema}'
+          })
+    },
+    onChange: async (value: string, oldVal: any, data: any, form: any) => {
+      onChange?.(value, oldVal, data, form);
+    }
   }
-};
+];
 
 // 渲染组件特性动作配置项
 export const renderCmptActionSelect = (
@@ -2112,7 +2081,6 @@ export const COMMON_ACTION_SCHEMA_MAP: {
     },
     schema: getArgsWrapper({
       type: 'wrapper',
-      className: 'p-none',
       body: [
         {
           type: 'radios',
@@ -2169,7 +2137,7 @@ export const COMMON_ACTION_SCHEMA_MAP: {
           size: 'lg',
           placeholder: '请输入待更新序号',
           visibleOn: `(data.__rendererName === 'input-table' || data.__rendererName === 'combo')
-          && data.__comboType === 'appoint'`
+      && data.__comboType === 'appoint'`
         },
         {
           type: 'combo',
@@ -2246,7 +2214,7 @@ export const COMMON_ACTION_SCHEMA_MAP: {
             }
           ],
           visibleOn: `(data.__rendererName === 'combo' || data.__rendererName === 'input-table')
-          && data.__comboType === 'all'`
+      && data.__comboType === 'all'`
         },
         getSchemaTpl('formulaControl', {
           name: '__valueInput',
@@ -2264,7 +2232,10 @@ export const COMMON_ACTION_SCHEMA_MAP: {
           size: 'lg',
           mode: 'horizontal',
           visibleOn: `data.__rendererName && !data.__isScopeContainer && data.__rendererName !== 'combo' && data.__rendererName !== 'input-table'`,
-          required: true
+          required: true,
+          horizontal: {
+            leftFixed: true
+          }
         })
       ]
     })
@@ -3101,12 +3072,12 @@ export const getEventControlConfig = (
         if (
           (config.data && typeof config.data === 'object') ||
           (config.args &&
-            !Object.keys(config.args).length &&
+            Object.keys(config.args).length &&
             config.data === undefined)
         ) {
           config.__addParam = true;
           config.__containerType = 'appoint';
-          config.dataMergeMode = 'override';
+          config.dataMergeMode = config.dataMergeMode || 'merge';
         }
 
         if (config.__addParam && config.data) {
@@ -3119,7 +3090,7 @@ export const getEventControlConfig = (
           }
         } else if (
           config.args &&
-          !Object.keys(config.args).length &&
+          Object.keys(config.args).length &&
           config.data === undefined
         ) {
           config.__reloadParams = objectToComboArray(config.args);

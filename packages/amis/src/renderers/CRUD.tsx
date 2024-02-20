@@ -760,6 +760,11 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       stopAutoRefreshWhenModalIsOpen
     } = this.props;
 
+    if (store.loading) {
+      //由于curd的loading样式未遮罩按钮部分，如果处于加载中时不处理操作
+      return;
+    }
+
     if (action.actionType === 'dialog') {
       store.setCurrentAction(action);
       const idx: number = (ctx as any).index;
@@ -1819,10 +1824,10 @@ export default class CRUD extends React.Component<CRUDProps, any> {
   clearSelection() {
     const {store} = this.props;
     const selected = store.selectedItems.concat();
-    const unSelected = store.unSelectedItems.concat();
+    const unSelected = store.unSelectedItems.concat(selected);
 
     store.setSelectedItems([]);
-    store.setUnSelectedItems(unSelected.concat(selected));
+    store.setUnSelectedItems(unSelected);
   }
 
   hasBulkActionsToolbar() {
@@ -2493,6 +2498,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       classnames: cx,
       keepItemSelectionOnPageChange,
       maxKeepItemSelectionLength,
+      maxItemSelectionLength,
       onAction,
       popOverContainer,
       translate: __,
@@ -2580,12 +2586,15 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                   : false
                 : multiple,
             selected:
-              pickerMode || keepItemSelectionOnPageChange
+              pickerMode ||
+              keepItemSelectionOnPageChange ||
+              maxItemSelectionLength
                 ? store.selectedItemsAsArray
                 : undefined,
             strictMode,
             keepItemSelectionOnPageChange,
             maxKeepItemSelectionLength,
+            maxItemSelectionLength,
             valueField: valueField || primaryField,
             primaryField: primaryField,
             hideQuickSaveBtn,

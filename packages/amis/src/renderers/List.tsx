@@ -2,7 +2,7 @@ import React from 'react';
 import {findDOMNode} from 'react-dom';
 import Sortable from 'sortablejs';
 import omit from 'lodash/omit';
-import {filterClassNameObject} from 'amis-core';
+import {filterClassNameObject, getPropValue} from 'amis-core';
 import {Button, Spinner, Checkbox, Icon, SpinnerExtraProps} from 'amis-ui';
 import {
   ListStore,
@@ -203,6 +203,11 @@ export interface ListSchema extends BaseSchema {
   affixHeader?: boolean;
 
   /**
+   * 是否固底
+   */
+  affixFooter?: boolean;
+
+  /**
    * 配置某项是否可以点选
    */
   itemCheckableOn?: SchemaExpression;
@@ -346,13 +351,14 @@ export default class List extends React.Component<ListProps, object> {
 
   static syncItems(store: IListStore, props: ListProps, prevProps?: ListProps) {
     const source = props.source;
-    const value = props.value || props.items;
+    const value = getPropValue(props, (props: ListProps) => props.items);
     let items: Array<object> = [];
     let updateItems = false;
 
     if (
       Array.isArray(value) &&
-      (!prevProps || (prevProps.value || prevProps.items) !== value)
+      (!prevProps ||
+        getPropValue(prevProps, (props: ListProps) => props.items) !== value)
     ) {
       items = value;
       updateItems = true;
@@ -617,7 +623,12 @@ export default class List extends React.Component<ListProps, object> {
 
           const parent = e.to as HTMLElement;
           if (e.oldIndex < parent.childNodes.length - 1) {
-            parent.insertBefore(e.item, parent.childNodes[e.oldIndex]);
+            parent.insertBefore(
+              e.item,
+              parent.childNodes[
+                e.oldIndex > e.newIndex ? e.oldIndex + 1 : e.oldIndex
+              ]
+            );
           } else {
             parent.appendChild(e.item);
           }
@@ -810,7 +821,8 @@ export default class List extends React.Component<ListProps, object> {
       render,
       showFooter,
       store,
-      classnames: cx
+      classnames: cx,
+      affixFooter
     } = this.props;
 
     if (showFooter === false) {
@@ -830,22 +842,35 @@ export default class List extends React.Component<ListProps, object> {
       : null;
     const actions = this.renderActions('footer');
 
+    const footerNode =
+      footer && (!Array.isArray(footer) || footer.length) ? (
+        <div
+          className={cx(
+            'List-footer',
+            footerClassName,
+            affixFooter ? 'List-footer--affix' : ''
+          )}
+          key="footer"
+        >
+          {render('footer', footer)}
+        </div>
+      ) : null;
+
     const toolbarNode =
       actions || child ? (
         <div
-          className={cx('List-toolbar', footerClassName)}
+          className={cx(
+            'List-toolbar',
+            footerClassName,
+            !footerNode && affixFooter ? 'List-footToolbar--affix' : ''
+          )}
           key="footer-toolbar"
         >
           {actions}
           {child}
         </div>
       ) : null;
-    const footerNode =
-      footer && (!Array.isArray(footer) || footer.length) ? (
-        <div className={cx('List-footer', footerClassName)} key="footer">
-          {render('footer', footer)}
-        </div>
-      ) : null;
+
     return footerNode && toolbarNode
       ? [toolbarNode, footerNode]
       : footerNode || toolbarNode || null;
@@ -1286,7 +1311,8 @@ export class ListItem extends React.Component<ListItemProps> {
                 'ListItem-fieldValue',
                 filterClassNameObject(field.className, data)
               ),
-              value: field.name ? resolveVariable(field.name, data) : undefined,
+              // 同 Cell 一样， 这里不要下发 value
+              // value: field.name ? resolveVariable(field.name, data) : undefined,
               onAction: this.handleAction,
               onQuickChange: this.handleQuickChange
             }

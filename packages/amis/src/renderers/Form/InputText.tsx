@@ -19,7 +19,9 @@ import {
   createObject,
   setVariable,
   ucFirst,
-  isEffectiveApi
+  isEffectiveApi,
+  getTestId,
+  buildTestId
 } from 'amis-core';
 import {Icon, SpinnerExtraProps, Input, Spinner, OverflowTpl} from 'amis-ui';
 import {ActionSchema} from '../Action';
@@ -117,6 +119,8 @@ export interface TextControlSchema extends FormOptionsSchema {
 
   /** 在内容为空的时候清除值 */
   clearValueOnEmpty?: boolean;
+
+  testid?: string;
 }
 
 export type InputTextRendererEvent =
@@ -294,14 +298,28 @@ export default class TextControl extends React.PureComponent<
   }
 
   async clearValue() {
-    const {onChange, resetValue, dispatchEvent} = this.props;
+    const {onChange, dispatchEvent, clearValueOnEmpty} = this.props;
+    let resetValue = this.props.resetValue;
 
-    const rendererEvent = await dispatchEvent(
+    if (clearValueOnEmpty && resetValue === '') {
+      resetValue = undefined;
+    }
+
+    const clearEvent = await dispatchEvent(
       'clear',
       resolveEventData(this.props, {value: resetValue})
     );
 
-    if (rendererEvent?.prevented) {
+    if (clearEvent?.prevented) {
+      return;
+    }
+
+    const changeEvent = await dispatchEvent(
+      'change',
+      resolveEventData(this.props, {resetValue})
+    );
+
+    if (changeEvent?.prevented) {
       return;
     }
 
@@ -712,6 +730,7 @@ export default class TextControl extends React.PureComponent<
       themeCss,
       css,
       id,
+      testid,
       nativeAutoComplete
     } = this.props;
     let type = this.props.type?.replace(/^(?:native|input)\-/, '');
@@ -769,13 +788,19 @@ export default class TextControl extends React.PureComponent<
               className={cx(
                 `TextControl-input TextControl-input--withAC`,
                 inputControlClassName,
-                setThemeClassName('inputControlClassName', id, themeCss || css),
-                setThemeClassName(
-                  'inputControlClassName',
+                setThemeClassName({
+                  ...this.props,
+                  name: 'inputControlClassName',
                   id,
-                  themeCss || css,
-                  'inner'
-                ),
+                  themeCss: themeCss || css
+                }),
+                setThemeClassName({
+                  ...this.props,
+                  name: 'inputControlClassName',
+                  id,
+                  themeCss: themeCss || css,
+                  extra: 'inner'
+                }),
                 inputOnly ? className : '',
                 {
                   'is-opened': isOpen,
@@ -785,6 +810,7 @@ export default class TextControl extends React.PureComponent<
                 }
               )}
               onClick={this.handleClick}
+              {...buildTestId(testid, data)}
             >
               <>
                 {filteredPlaceholder &&
@@ -839,12 +865,14 @@ export default class TextControl extends React.PureComponent<
               </>
 
               {clearable && !disabled && !readOnly && value ? (
-                <a onClick={this.clearValue}>
+                <a
+                  onClick={this.clearValue}
+                  className={cx('TextControl-clear')}
+                >
                   <Icon
                     icon="input-clear"
                     className="icon"
-                    classNameProp={cx('TextControl-clear')}
-                    iconContent="InputBox-clear"
+                    iconContent="InputText-clear"
                   />
                 </a>
               ) : null}
@@ -960,6 +988,7 @@ export default class TextControl extends React.PureComponent<
       themeCss,
       css,
       id,
+      testid,
       nativeAutoComplete
     } = this.props;
 
@@ -972,16 +1001,23 @@ export default class TextControl extends React.PureComponent<
           {
             [`TextControl-input--border${ucFirst(borderMode)}`]: borderMode
           },
-          setThemeClassName('inputControlClassName', id, themeCss || css),
-          setThemeClassName(
-            'inputControlClassName',
+          setThemeClassName({
+            ...this.props,
+            name: 'inputControlClassName',
             id,
-            themeCss || css,
-            'inner'
-          ),
+            themeCss: themeCss || css
+          }),
+          setThemeClassName({
+            ...this.props,
+            name: 'inputControlClassName',
+            id,
+            themeCss: themeCss || css,
+            extra: 'inner'
+          }),
           inputControlClassName,
           inputOnly ? className : ''
         )}
+        {...buildTestId(testid, data)}
       >
         {prefix ? (
           <span className={cx('TextControl-inputPrefix')}>
@@ -1009,6 +1045,7 @@ export default class TextControl extends React.PureComponent<
           className={cx(nativeInputClassName, {
             'TextControl-input-password': type === 'password' && revealPassword
           })}
+          {...buildTestId(testid && `${testid}-input`)}
         />
         {clearable && !disabled && !readOnly && value ? (
           <a onClick={this.clearValue} className={cx('TextControl-clear')}>
@@ -1094,7 +1131,13 @@ export default class TextControl extends React.PureComponent<
             className={cx(
               `${ns}TextControl-button`,
               addOnClassName,
-              setThemeClassName('addOnClassName', id, themeCss || css, 'addOn')
+              setThemeClassName({
+                ...this.props,
+                name: 'addOnClassName',
+                id,
+                themeCss: themeCss || css,
+                extra: 'addOn'
+              })
             )}
           >
             {render('addOn', addOn, {
@@ -1106,7 +1149,13 @@ export default class TextControl extends React.PureComponent<
             className={cx(
               `${ns}TextControl-addOn`,
               addOnClassName,
-              setThemeClassName('addOnClassName', id, themeCss || css, 'addOn')
+              setThemeClassName({
+                ...this.props,
+                name: 'addOnClassName',
+                id,
+                themeCss: themeCss || css,
+                extra: 'addOn'
+              })
             )}
           >
             {iconElement}
@@ -1163,6 +1212,7 @@ export default class TextControl extends React.PureComponent<
       <>
         {this.renderBody(input)}
         <CustomStyle
+          {...this.props}
           config={{
             themeCss: themeCss || css,
             classNames: [
@@ -1183,6 +1233,7 @@ export default class TextControl extends React.PureComponent<
           env={env}
         />
         <CustomStyle
+          {...this.props}
           config={{
             themeCss: formatInputThemeCss(themeCss || css),
             classNames: [
@@ -1211,6 +1262,7 @@ export default class TextControl extends React.PureComponent<
         />
 
         <CustomStyle
+          {...this.props}
           config={{
             themeCss: themeCss || css,
             classNames: [

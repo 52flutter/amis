@@ -76,7 +76,6 @@ export default function Cell({
     return (
       <td
         style={style}
-        key={props.key}
         className={cx(column.pristine.className, stickyClassName)}
       >
         <Checkbox
@@ -93,7 +92,6 @@ export default function Cell({
     return (
       <td
         style={style}
-        key={props.key}
         className={cx(column.pristine.className, stickyClassName, {
           'is-dragDisabled': !item.draggable
         })}
@@ -105,7 +103,6 @@ export default function Cell({
     return (
       <td
         style={style}
-        key={props.key}
         className={cx(column.pristine.className, stickyClassName)}
       >
         {item.expandable ? (
@@ -214,12 +211,16 @@ export default function Cell({
     loading: column.type === 'operation' ? false : props.loading,
     btnDisabled: store.dragging,
     data: data,
-    value: column.name
-      ? resolveVariable(
-          column.name,
-          finalCanAccessSuperData ? item.locals : item.data
-        )
-      : column.value,
+
+    // 不要下发 value，组件基本上都会自己取
+    // 如果下发了表单项会认为是 controlled value
+    // 就不会去跑 extraName 之类的逻辑了
+    // value: column.name
+    //   ? resolveVariable(
+    //       column.name,
+    //       finalCanAccessSuperData ? item.locals : item.data
+    //     )
+    //   : column.value,
     popOverContainer: popOverContainer,
     rowSpan: item.rowSpans[column.name as string],
     quickEditFormRef: quickEditFormRef,

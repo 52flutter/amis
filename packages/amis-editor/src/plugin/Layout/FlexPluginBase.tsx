@@ -1,6 +1,7 @@
 /**
  * @file Flex 常见布局 1:3
  */
+import {PlainObject} from 'amis-core';
 import {LayoutBasePlugin, PluginEvent} from 'amis-editor-core';
 import {getSchemaTpl, tipedLabel} from 'amis-editor-core';
 import type {
@@ -17,13 +18,13 @@ export const defaultFlexColumnSchema = (title?: string) => {
   return {
     type: 'container',
     body: [],
-    size: 'xs',
+    size: 'none',
     style: {
       position: 'static',
       display: 'block',
       flex: '1 1 auto',
       flexGrow: 1,
-      flexBasis: 'auto'
+      flexBasis: 0
     },
     wrapperBody: false,
     isFixedHeight: false,
@@ -40,7 +41,7 @@ const defaultFlexPreviewSchema = (title?: string) => {
     style: {
       display: 'block',
       flex: '1 1 auto',
-      flexBasis: 'auto',
+      flexBasis: 0,
       textAlign: 'center',
       marginRight: 10
     },
@@ -53,14 +54,15 @@ const defaultFlexContainerSchema = (
   flexItemSchema: (title?: string) => any = defaultFlexColumnSchema
 ) => ({
   type: 'flex',
-  className: 'p-1',
   items: [
     flexItemSchema('第一列'),
     flexItemSchema('第二列'),
     flexItemSchema('第三列')
   ],
   style: {
-    position: 'relative'
+    position: 'relative',
+    rowGap: '10px',
+    columnGap: '10px'
   }
 });
 
@@ -85,6 +87,26 @@ export class FlexPluginBase extends LayoutBasePlugin {
   panelTitle = '布局容器';
 
   panelJustify = true; // 右侧配置项默认左右展示
+
+  resetFlexBasis = (node: EditorNodeType, flexSetting: PlainObject = {}) => {
+    let schema = node.schema;
+
+    if (
+      String(flexSetting.flexDirection).includes('column') &&
+      !schema?.style?.height
+    ) {
+      (node.children || []).forEach(child => {
+        if (
+          !child.schema?.style?.height ||
+          /^0/.test(child.schema?.style?.flexBasis)
+        ) {
+          child.updateSchemaStyle({
+            flexBasis: undefined
+          });
+        }
+      });
+    }
+  };
 
   panelBodyCreator = (context: BaseEventContext) => {
     const curRendererSchema = context?.schema || {};
@@ -126,10 +148,24 @@ export class FlexPluginBase extends LayoutBasePlugin {
                     label: '弹性布局设置',
                     direction: curRendererSchema.direction,
                     justify: curRendererSchema.justify || 'center',
-                    alignItems: curRendererSchema.alignItems
+                    alignItems: curRendererSchema.alignItems,
+                    pipeOut: (value: any) => {
+                      // 纵向排列的非固定高度flex容器子元素去掉为0的flexBasis
+                      this.resetFlexBasis(context.node, value);
+                      return value;
+                    }
                   }),
 
                   getSchemaTpl('layout:flex-wrap'),
+
+                  getSchemaTpl('layout:flex-basis', {
+                    label: '行间隔',
+                    name: 'style.rowGap'
+                  }),
+                  getSchemaTpl('layout:flex-basis', {
+                    label: '列间隔',
+                    name: 'style.columnGap'
+                  }),
 
                   ...(isFlexItem
                     ? [

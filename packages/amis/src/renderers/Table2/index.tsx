@@ -31,7 +31,8 @@ import {
   filterTarget,
   changedEffect,
   evalExpressionWithConditionBuilder,
-  normalizeApi
+  normalizeApi,
+  getPropValue
 } from 'amis-core';
 import {Icon, Table, BadgeObject, SpinnerExtraProps} from 'amis-ui';
 import type {
@@ -604,13 +605,14 @@ export default class Table2 extends React.Component<Table2Props, object> {
     prevProps?: Table2Props
   ) {
     const source = props.source;
-    const value = props.value || props.items;
+    const value = getPropValue(props, (props: Table2Props) => props.items);
     let rows: Array<object> = [];
     let updateRows = false;
 
     if (
       Array.isArray(value) &&
-      (!prevProps || (prevProps.value || prevProps.items) !== value)
+      (!prevProps ||
+        getPropValue(prevProps, (props: Table2Props) => props.items) !== value)
     ) {
       updateRows = true;
       rows = value;
@@ -932,6 +934,8 @@ export default class Table2 extends React.Component<Table2Props, object> {
         });
 
         const isGroupColumn = !!column.children?.length;
+        const finalCanAccessSuperData =
+          column.canAccessSuperData ?? canAccessSuperData;
         // 设置了type值 就完全按渲染器处理了
         if (column.type) {
           Object.assign(clone, {
@@ -949,11 +953,11 @@ export default class Table2 extends React.Component<Table2Props, object> {
 
               const obj = {
                 children: this.renderCellSchema(column, {
-                  data: record,
+                  data: item.locals,
                   value: column.name
                     ? resolveVariable(
                         column.name,
-                        canAccessSuperData ? item.locals : item.data
+                        finalCanAccessSuperData ? item.locals : item.data
                       )
                     : column.name,
                   popOverContainer:

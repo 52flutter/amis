@@ -7,7 +7,8 @@ import {
   resolveVariableAndFilter,
   setVariable,
   setThemeClassName,
-  ValidateError
+  ValidateError,
+  getTestId
 } from 'amis-core';
 import {Renderer, RendererProps} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
@@ -47,6 +48,8 @@ export interface DialogSchema extends BaseSchema {
    * 默认不用填写，自动会创建确认和取消按钮。
    */
   actions?: Array<ActionSchema>;
+
+  testid?: string;
 
   /**
    * 内容区域
@@ -231,7 +234,7 @@ export default class Dialog extends React.Component<DialogProps> {
   }
 
   buildActions(): Array<ActionSchema> {
-    const {actions, confirm, translate: __} = this.props;
+    const {actions, confirm, testid, translate: __} = this.props;
 
     if (typeof actions !== 'undefined') {
       return actions;
@@ -240,6 +243,7 @@ export default class Dialog extends React.Component<DialogProps> {
     let ret: Array<ActionSchema> = [];
     ret.push({
       type: 'button',
+      testid: getTestId(testid && `${testid}-cancel`),
       actionType: 'cancel',
       label: __('cancel')
     });
@@ -247,6 +251,7 @@ export default class Dialog extends React.Component<DialogProps> {
     if (confirm) {
       ret.push({
         type: 'button',
+        testid: getTestId(testid && `${testid}-confirm`),
         actionType: 'confirm',
         label: __('confirm'),
         primary: true
@@ -596,12 +601,18 @@ export default class Dialog extends React.Component<DialogProps> {
         size={size}
         height={height}
         width={width}
-        modalClassName={setThemeClassName('dialogClassName', id, themeCss)}
-        modalMaskClassName={setThemeClassName(
-          'dialogMaskClassName',
+        modalClassName={setThemeClassName({
+          ...this.props,
+          name: 'dialogClassName',
           id,
           themeCss
-        )}
+        })}
+        modalMaskClassName={setThemeClassName({
+          ...this.props,
+          name: 'dialogMaskClassName',
+          id,
+          themeCss
+        })}
         backdrop="static"
         onHide={this.handleSelfClose}
         keyboard={closeOnEsc && !store.loading}
@@ -625,7 +636,12 @@ export default class Dialog extends React.Component<DialogProps> {
             className={cx(
               'Modal-header',
               headerClassName,
-              setThemeClassName('dialogHeaderClassName', id, themeCss)
+              setThemeClassName({
+                ...this.props,
+                name: 'dialogHeaderClassName',
+                id,
+                themeCss
+              })
             )}
           >
             {showCloseButton !== false && !store.loading ? (
@@ -645,7 +661,12 @@ export default class Dialog extends React.Component<DialogProps> {
             <div
               className={cx(
                 'Modal-title',
-                setThemeClassName('dialogTitleClassName', id, themeCss)
+                setThemeClassName({
+                  ...this.props,
+                  name: 'dialogTitleClassName',
+                  id,
+                  themeCss
+                })
               )}
             >
               {filter(__(title), store.formData)}
@@ -656,7 +677,12 @@ export default class Dialog extends React.Component<DialogProps> {
             className={cx(
               'Modal-header',
               headerClassName,
-              setThemeClassName('dialogHeaderClassName', id, themeCss)
+              setThemeClassName({
+                ...this.props,
+                name: 'dialogHeaderClassName',
+                id,
+                themeCss
+              })
             )}
           >
             {showCloseButton !== false && !store.loading ? (
@@ -699,7 +725,12 @@ export default class Dialog extends React.Component<DialogProps> {
             className={cx(
               'Modal-body',
               bodyClassName,
-              setThemeClassName('dialogBodyClassName', id, themeCss)
+              setThemeClassName({
+                ...this.props,
+                name: 'dialogBodyClassName',
+                id,
+                themeCss
+              })
             )}
             role="dialog-body"
           >
@@ -711,12 +742,18 @@ export default class Dialog extends React.Component<DialogProps> {
             className={cx(
               'Modal-body',
               bodyClassName,
-              setThemeClassName('dialogBodyClassName', id, themeCss)
+              setThemeClassName({
+                ...this.props,
+                name: 'dialogBodyClassName',
+                id,
+                themeCss
+              })
             )}
             role="dialog-body"
           >
             {this.renderBody(body, 'body')}
             <CustomStyle
+              {...this.props}
               config={{
                 themeCss: themeCss,
                 classNames: [

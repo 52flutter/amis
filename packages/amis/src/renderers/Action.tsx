@@ -248,6 +248,11 @@ export interface DialogActionSchema extends ButtonSchema {
   nextCondition?: SchemaExpression;
   reload?: SchemaReload;
   redirect?: string;
+
+  /**
+   * 数据映射
+   */
+  data?: any;
 }
 
 export interface DrawerActionSchema extends ButtonSchema {
@@ -268,6 +273,11 @@ export interface DrawerActionSchema extends ButtonSchema {
   nextCondition?: SchemaExpression;
   reload?: SchemaReload;
   redirect?: string;
+
+  /**
+   * 数据映射
+   */
+  data?: any;
 }
 
 export interface ToastActionSchema extends ButtonSchema {

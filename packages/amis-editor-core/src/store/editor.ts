@@ -21,8 +21,6 @@ import {
   guid,
   appTranslate,
   JSONGetByPath,
-  getDialogListBySchema,
-  getFixDialogType,
   addModal
 } from '../../src/util';
 import {
@@ -1768,7 +1766,7 @@ export const MainStore = types
             args: undefined,
             dialog: undefined,
             drawer: undefined,
-            [newHostKey]: modal
+            [newHostKey]: JSONPipeIn(modal)
           });
         }
 

@@ -32,6 +32,7 @@ import intersectionWith from 'lodash/intersectionWith';
 import type {TooltipWrapperSchema} from '../TooltipWrapper';
 import type {Option} from 'amis-core';
 import {supportStatic} from './StaticHoc';
+import {reaction} from 'mobx';
 
 /**
  * Picker
@@ -172,9 +173,36 @@ export default class PickerControl extends React.PureComponent<
   };
 
   input: React.RefObject<HTMLInputElement> = React.createRef();
+  toDispose: Array<() => void> = [];
+  mounted = false;
 
-  componentDidMount() {
-    this.fetchOptions();
+  constructor(props: PickerProps) {
+    super(props);
+
+    const {formInited, addHook, formItem} = props;
+
+    const onIninted = async () => {
+      await this.fetchOptions();
+
+      this.mounted &&
+        this.toDispose.push(
+          reaction(
+            () => JSON.stringify(formItem?.tmpValue),
+            () => this.fetchOptions()
+          )
+        );
+    };
+
+    formItem &&
+      this.toDispose.push(
+        formInited || !addHook
+          ? formItem.addInitHook(onIninted)
+          : addHook(onIninted, 'init')
+      );
+  }
+
+  componentDidMount(): void {
+    this.mounted = true;
   }
 
   componentDidUpdate(prevProps: PickerProps) {
@@ -186,17 +214,20 @@ export default class PickerControl extends React.PureComponent<
         schema: this.buildSchema(props)
       });
     } else if (
-      JSON.stringify(props.value) !== JSON.stringify(prevProps.value)
-    ) {
-      this.fetchOptions();
-    } else if (
       isApiOutdated(prevProps.source, props.source, prevProps.data, props.data)
     ) {
-      this.fetchOptions();
+      props.formItem?.inited && this.fetchOptions();
     }
   }
 
-  fetchOptions() {
+  componentWillUnmount(): void {
+    this.toDispose.forEach(fn => fn());
+    this.toDispose = [];
+    this.mounted = false;
+  }
+
+  @autobind
+  fetchOptions(): any {
     const {value, formItem, valueField, labelField, source, data} = this.props;
     let selectedOptions: any;
 
@@ -221,7 +252,7 @@ export default class PickerControl extends React.PureComponent<
     if (isPureVariable(source)) {
       formItem.setOptions(resolveVariableAndFilter(source, data, '| raw'));
     } else if (isEffectiveApi(source, ctx)) {
-      formItem.loadOptions(source, ctx, {
+      return formItem.loadOptions(source, ctx, {
         autoAppend: true
       });
     }

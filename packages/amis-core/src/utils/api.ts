@@ -143,11 +143,12 @@ export function buildApi(
       query,
       (api as ApiObject)?.filterEmptyQuery
         ? {
+            ...(api as ApiObject)?.qsOptions,
             filter: (key: string, value: any) => {
               return value === '' ? undefined : value;
             }
           }
-        : undefined
+        : (api as ApiObject)?.qsOptions
     );
   /** 追加data到请求的Query中 */
   const attachDataToQuery = (

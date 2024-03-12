@@ -399,8 +399,17 @@ export class Chart extends React.Component<ChartProps> {
 
         let theme = 'default';
 
+        let _chartTheme = chartTheme;
         if (chartTheme) {
-          echarts.registerTheme('custom', chartTheme);
+          // 修改 主题支持变量
+          if (typeof chartTheme === 'string') {
+            _chartTheme = resolveVariableAndFilter(
+              _chartTheme,
+              this.props.data,
+              '| raw'
+            );
+          }
+          echarts.registerTheme('custom', _chartTheme);
           theme = 'custom';
         }
 

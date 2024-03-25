@@ -6,7 +6,7 @@
 
 import React from 'react';
 import Html from './Html';
-import {uncontrollable} from 'amis-core';
+import {EnvContext, uncontrollable} from 'amis-core';
 import {findDOMNode} from 'react-dom';
 import Tooltip from './Tooltip';
 import {ClassNamesFn, themeable} from 'amis-core';
@@ -27,7 +27,7 @@ export interface TooltipObject {
   /**
    * 浮层出现位置
    */
-  placement?: 'top' | 'right' | 'bottom' | 'left';
+  placement?: 'top' | 'right' | 'bottom' | 'left' | 'auto';
   /**
    * 主题样式
    */
@@ -95,7 +95,7 @@ export interface TooltipWrapperProps {
   tooltip?: string | TooltipObject;
   classPrefix: string;
   classnames: ClassNamesFn;
-  placement: 'top' | 'right' | 'bottom' | 'left';
+  placement: 'top' | 'right' | 'bottom' | 'left' | 'auto';
   container?: HTMLElement | (() => HTMLElement | null | undefined);
   trigger: Trigger | Array<Trigger>;
   rootClose: boolean;

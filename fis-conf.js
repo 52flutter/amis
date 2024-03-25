@@ -92,6 +92,7 @@ fis.set('project.files', [
   '/examples/static/*.jpg',
   '/examples/static/*.jpeg',
   '/examples/static/*.docx',
+  '/examples/static/*.xlsx',
   '/examples/static/photo/*.jpeg',
   '/examples/static/photo/*.png',
   '/examples/static/audio/*.mp3',
@@ -526,6 +527,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
         '!punycode/**',
         '!office-viewer/**',
         '!fflate/**',
+        '!numfmt/**',
         '!amis-formula/lib/doc.js'
       ],
 
@@ -579,7 +581,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
         'echarts-wordcloud/**'
       ],
 
-      'office-viewer.js': ['office-viewer/**', 'fflate/**'],
+      'office-viewer.js': ['office-viewer/**', 'fflate/**', 'numfmt/**'],
       'json-view.js': 'react-json-view/**',
       'fomula-doc.js': 'amis-formula/lib/doc.js',
 
@@ -608,7 +610,8 @@ if (fis.project.currentMedia() === 'publish-sdk') {
         '!markdown-it/**',
         '!markdown-it-html5-media/**',
         '!office-viewer/**',
-        '!fflate/**'
+        '!fflate/**',
+        '!numfmt/**'
       ]
     }),
     postpackager: [
@@ -697,7 +700,8 @@ if (fis.project.currentMedia() === 'publish-sdk') {
   const ghPages = fis.media('gh-pages');
   ghPages.set('project.files', [
     'examples/index.html',
-    '/examples/static/*.docx'
+    '/examples/static/*.docx',
+    '/examples/static/*.xlsx'
   ]);
 
   ghPages.match('*.scss', {
@@ -842,6 +846,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
         '!punycode/**',
         '!amis-formula/**',
         '!fflate/**',
+        '!numfmt/**',
         '!office-viewer/**',
         '!amis-core/**',
         '!amis-ui/**',
@@ -908,7 +913,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
         '!/examples/components/EChartsEditor/Common.tsx'
       ],
 
-      'pkg/office-viewer.js': ['office-viewer/**', 'fflate/**'],
+      'pkg/office-viewer.js': ['office-viewer/**', 'fflate/**', 'numfmt/**'],
 
       'pkg/rest.js': [
         '**.{js,jsx,ts,tsx}',
@@ -933,7 +938,8 @@ if (fis.project.currentMedia() === 'publish-sdk') {
         '!uc.micro/**',
         '!markdown-it/**',
         '!markdown-it-html5-media/**',
-        '!fflate/**'
+        '!fflate/**',
+        '!numfmt/**'
       ],
 
       'pkg/npm.css': ['node_modules/*/**.css', '!monaco-editor/**', '!amis/**'],
@@ -1018,7 +1024,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
     useHash: true
   });
 
-  ghPages.match('*.docx', {
+  ghPages.match('*.{docx,xlsx}', {
     useHash: false
   });
 

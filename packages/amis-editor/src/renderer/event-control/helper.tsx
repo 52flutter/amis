@@ -326,7 +326,9 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   value: {
                     type: 'dialog',
                     ...modal,
-                    definitions: modalsToDefinitions(store.modals)
+                    definitions: modalsToDefinitions(
+                      store.modals.filter((m: any) => m.$$id !== modalId)
+                    )
                   },
                   onChange: ({definitions, ...modal}: any, diff: any) => {
                     store.updateModal(modalId, modal, definitions);
@@ -2955,8 +2957,10 @@ export const getEventControlConfig = (
 
   return {
     showOldEntry:
-      !!context.schema.actionType ||
-      ['submit', 'reset'].includes(context.schema.type),
+      !!(
+        context.schema.actionType &&
+        !['dialog', 'drawer'].includes(context.schema.type)
+      ) || ['submit', 'reset'].includes(context.schema.type),
     actions: manager?.pluginActions,
     events: manager?.pluginEvents,
     actionTree,

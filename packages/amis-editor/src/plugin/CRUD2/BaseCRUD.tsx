@@ -926,7 +926,7 @@ export class BaseCRUDPlugin extends BasePlugin {
                 step: 10,
                 min: 1000
               },
-              getSchemaTpl('tplFormulaControl', {
+              getSchemaTpl('expressionFormulaControl', {
                 name: 'stopAutoRefreshWhen',
                 label: tipedLabel(
                   '停止条件',

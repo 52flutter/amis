@@ -7,8 +7,7 @@ import {
   RendererProps,
   evalExpressionWithConditionBuilder,
   filterTarget,
-  mapTree,
-  buildTestId
+  mapTree
 } from 'amis-core';
 import {SchemaNode, Schema, ActionObject, PlainObject} from 'amis-core';
 import {CRUDStore, ICRUDStore} from 'amis-core';
@@ -771,18 +770,26 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       const idx: number = (ctx as any).index;
       const length = store.items.length;
       stopAutoRefreshWhenModalIsOpen && clearTimeout(this.timer);
-      store.openDialog(
-        ctx,
-        {
-          hasNext: idx < length - 1,
-          nextIndex: idx + 1,
-          hasPrev: idx > 0,
-          prevIndex: idx - 1,
-          index: idx
-        },
-        action.callback,
-        delegate || (this.context as any)
-      );
+      return new Promise<any>(resolve => {
+        store.openDialog(
+          ctx,
+          {
+            hasNext: idx < length - 1,
+            nextIndex: idx + 1,
+            hasPrev: idx > 0,
+            prevIndex: idx - 1,
+            index: idx
+          },
+          (confirmed: any, value: any) => {
+            action.callback?.(confirmed, value);
+            resolve({
+              confirmed,
+              value
+            });
+          },
+          delegate || (this.context as any)
+        );
+      });
     } else if (action.actionType === 'ajax') {
       store.setCurrentAction(action, this.props.resolveDefinitions);
       const data = ctx;
@@ -1117,7 +1124,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       env
     } = this.props;
 
-    store.closeDialog(true);
+    store.closeDialog(true, values);
     const dialogAction = store.action as ActionObject;
 
     if (stopAutoRefreshWhenModalIsOpen && interval) {
@@ -1815,6 +1822,10 @@ export default class CRUD extends React.Component<CRUDProps, any> {
   }
 
   doAction(action: ActionObject, data: object, throwErrors: boolean = false) {
+    if (action.actionType === 'submitQuickEdit') {
+      return this.control?.doAction(action, data, throwErrors);
+    }
+
     return this.handleAction(undefined, action, data, throwErrors);
   }
 
@@ -1990,7 +2001,8 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       render,
       classnames: cx,
       alwaysShowPagination,
-      perPageAvailable
+      perPageAvailable,
+      testIdBuilder
     } = this.props;
     const {page, lastPage} = store;
 
@@ -2038,7 +2050,8 @@ export default class CRUD extends React.Component<CRUDProps, any> {
         {render(
           'pagination',
           {
-            type: 'pagination'
+            type: 'pagination',
+            testIdBuilder: testIdBuilder?.getChild('pagination')
           },
           {
             ...extraProps,
@@ -2085,7 +2098,8 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       perPageAvailable,
       classnames: cx,
       classPrefix: ns,
-      translate: __
+      translate: __,
+      testIdBuilder
     } = this.props;
 
     const items = childProps.items;
@@ -2116,13 +2130,20 @@ export default class CRUD extends React.Component<CRUDProps, any> {
           onChange={(value: any) => this.handleChangePage(1, value.value)}
           clearable={false}
           popOverContainer={this.parentContainer}
+          testIdBuilder={testIdBuilder?.getChild('perPage')}
         />
       </div>
     );
   }
 
   renderLoadMore() {
-    const {store, classPrefix: ns, classnames: cx, translate: __} = this.props;
+    const {
+      store,
+      classPrefix: ns,
+      classnames: cx,
+      translate: __,
+      testIdBuilder
+    } = this.props;
     const {page, lastPage} = store;
 
     return (
@@ -2135,6 +2156,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             this.search({page: page + 1, loadDataMode: 'load-more'})
           }
           size="sm"
+          {...testIdBuilder?.getChild('loadMore').getTestId()}
         >
           {__('CRUD.loadMore')}
         </Button>
@@ -2213,7 +2235,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       return null;
     }
 
-    const {render, store, mobileUI, translate: __} = this.props;
+    const {render, store, mobileUI, translate: __, testIdBuilder} = this.props;
     const type = (toolbar as Schema).type || toolbar;
 
     if (type === 'bulkActions' || type === 'bulk-actions') {
@@ -2258,7 +2280,11 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       const cx = this.props.classnames;
       if (len) {
         return (
-          <div className={cx('Crud-toolbar')} key={index}>
+          <div
+            className={cx('Crud-toolbar')}
+            key={index}
+            {...testIdBuilder?.getChild('toolbar').getTestId()}
+          >
             {children.map(({toolbar, dom: child}, index) => {
               const type = (toolbar as Schema).type || toolbar;
               let align =
@@ -2525,7 +2551,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       onSearchableFromInit,
       headerToolbarRender,
       footerToolbarRender,
-      testid,
+      testIdBuilder,
       ...rest
     } = this.props;
 
@@ -2536,7 +2562,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
           'is-mobile': isMobile()
         })}
         style={style}
-        {...buildTestId(testid)}
+        {...testIdBuilder?.getChild('wrapper').getTestId()}
       >
         {filter && (!store.filterTogggable || store.filterVisible)
           ? render(
@@ -2547,7 +2573,8 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                 submitText: __('search'),
                 ...filter,
                 type: 'form',
-                api: null
+                api: null,
+                testIdBuilder: testIdBuilder?.getChild('filter')
               },
               {
                 key: 'filter',
@@ -2727,38 +2754,9 @@ export class CRUDRenderer extends CRUD {
     condition?: any
   ) {
     const {store} = this.props;
-    const len = store.data.items?.length;
 
-    if (index !== undefined) {
-      // TODO 修复以下逻辑
-      // store.data.items 可能没值
-      // crud 可能 table 也可能可能是 list 或者 cards，应该交给 body 子组件自己去处理
-      // 修改完数据应该是类似 quickEdit 修改后的效果，目前界面上无交互出现
-      // @hsm-lv
-      let items = [...store.data.items];
-      const indexs = String(index).split(',');
-      indexs.forEach(i => {
-        const intIndex = Number(i);
-        items.splice(intIndex, 1, values);
-      });
-      // 更新指定行记录，只需要提供行记录即可
-      return store.updateData({...values, items}, undefined, replace);
-    } else if (condition !== undefined) {
-      let items = [...store.data.items];
-      for (let i = 0; i < len; i++) {
-        const item = items[i];
-        const isUpdate = await evalExpressionWithConditionBuilder(
-          condition,
-          item
-        );
-
-        if (isUpdate) {
-          items.splice(i, 1, values);
-        }
-      }
-
-      // 更新指定行记录，只需要提供行记录即可
-      return store.updateData({...values, items}, undefined, replace);
+    if (index !== undefined || condition !== undefined) {
+      return this.control?.setData?.(values, replace, index, condition);
     } else {
       const total = values?.total || values?.count;
       if (total !== undefined) {

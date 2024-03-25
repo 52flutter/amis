@@ -6,8 +6,7 @@ import {
   isPureVariable,
   resolveVariableAndFilter,
   setThemeClassName,
-  ValidateError,
-  getTestId
+  ValidateError
 } from 'amis-core';
 import {Renderer, RendererProps} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
@@ -155,8 +154,6 @@ export interface DrawerSchema extends BaseSchema {
   data?: {
     [propName: string]: any;
   };
-
-  testid?: string;
 }
 
 export type DrawerSchemaBase = Omit<DrawerSchema, 'type'>;
@@ -272,7 +269,7 @@ export default class Drawer extends React.Component<DrawerProps> {
   }
 
   buildActions(): Array<ActionSchema> {
-    const {actions, confirm, testid, translate: __} = this.props;
+    const {actions, confirm, translate: __, testIdBuilder} = this.props;
 
     if (typeof actions !== 'undefined') {
       return actions;
@@ -281,7 +278,7 @@ export default class Drawer extends React.Component<DrawerProps> {
     let ret: Array<ActionSchema> = [];
     ret.push({
       type: 'button',
-      testid: getTestId(testid && `${testid}-cancel`),
+      testIdBuilder: testIdBuilder?.getChild('cancel'),
       actionType: 'close',
       label: __('cancel')
     });
@@ -290,7 +287,7 @@ export default class Drawer extends React.Component<DrawerProps> {
       ret.push({
         type: 'button',
         actionType: 'confirm',
-        testid: getTestId(testid && `${testid}-confirm`),
+        testIdBuilder: testIdBuilder?.getChild('confirm'),
         label: __('confirm'),
         primary: true
       });
@@ -362,7 +359,7 @@ export default class Drawer extends React.Component<DrawerProps> {
       return;
     }
 
-    store.closeDrawer();
+    store.closeDrawer(true, values);
   }
 
   handleDrawerClose(...args: Array<any>) {
@@ -375,7 +372,7 @@ export default class Drawer extends React.Component<DrawerProps> {
       return;
     }
 
-    store.closeDrawer();
+    store.closeDrawer(...args);
   }
 
   handleDialogConfirm(
@@ -399,7 +396,7 @@ export default class Drawer extends React.Component<DrawerProps> {
       return;
     }
 
-    store.closeDialog(true);
+    store.closeDialog(true, values);
   }
 
   handleDialogClose(...args: Array<any>) {
@@ -971,15 +968,31 @@ export class DrawerRenderer extends Drawer {
       this.tryChildrenToHandle(action, data) || onClose();
     } else if (action.actionType === 'drawer') {
       store.setCurrentAction(action, this.props.resolveDefinitions);
-      store.openDrawer(data);
+      return new Promise<any>(resolve => {
+        store.openDrawer(data, undefined, (confirmed: any, value: any) => {
+          action.callback?.(confirmed, value);
+          resolve({
+            confirmed,
+            value
+          });
+        });
+      });
     } else if (action.actionType === 'dialog') {
       store.setCurrentAction(action, this.props.resolveDefinitions);
-      store.openDialog(
-        data,
-        undefined,
-        action.callback,
-        delegate || (this.context as any)
-      );
+      return new Promise<any>(resolve => {
+        store.openDialog(
+          data,
+          undefined,
+          (confirmed: any, value: any) => {
+            action.callback?.(confirmed, value);
+            resolve({
+              confirmed,
+              value
+            });
+          },
+          delegate || (this.context as any)
+        );
+      });
     } else if (action.actionType === 'reload') {
       store.setCurrentAction(action, this.props.resolveDefinitions);
       action.target && scoped.reload(action.target, data);

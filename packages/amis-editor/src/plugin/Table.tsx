@@ -344,6 +344,10 @@ export class TablePlugin extends BasePlugin {
                 index: {
                   type: 'number',
                   title: '当前行索引'
+                },
+                indexPath: {
+                  type: 'number',
+                  title: '行索引路劲'
                 }
               }
             }
@@ -370,6 +374,10 @@ export class TablePlugin extends BasePlugin {
                 index: {
                   type: 'number',
                   title: '当前行索引'
+                },
+                indexPath: {
+                  type: 'number',
+                  title: '行索引路劲'
                 }
               }
             }
@@ -396,6 +404,10 @@ export class TablePlugin extends BasePlugin {
                 index: {
                   type: 'number',
                   title: '当前行索引'
+                },
+                indexPath: {
+                  type: 'number',
+                  title: '行索引路劲'
                 }
               }
             }
@@ -422,6 +434,10 @@ export class TablePlugin extends BasePlugin {
                 index: {
                   type: 'number',
                   title: '当前行索引'
+                },
+                indexPath: {
+                  type: 'number',
+                  title: '行索引路劲'
                 }
               }
             }

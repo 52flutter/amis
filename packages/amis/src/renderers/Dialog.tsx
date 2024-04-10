@@ -7,7 +7,8 @@ import {
   resolveVariableAndFilter,
   setVariable,
   setThemeClassName,
-  ValidateError
+  ValidateError,
+  RendererEvent
 } from 'amis-core';
 import {Renderer, RendererProps} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
@@ -418,7 +419,7 @@ export default class Dialog extends React.Component<DialogProps> {
   handleFormInit(data: any) {
     const {store} = this.props;
 
-    store.setFormData(data);
+    store.updateData(data);
   }
 
   handleFormChange(data: any, name?: string) {
@@ -426,20 +427,17 @@ export default class Dialog extends React.Component<DialogProps> {
 
     // 如果 dialog 里面不放 form，而是直接放表单项就会进到这里来。
     if (typeof name === 'string') {
-      const mergedData = {
-        ...store.form
-      };
-      setVariable(mergedData, name, data);
-      data = mergedData;
+      store.changeValue(name, data);
+      return;
     }
 
-    store.setFormData(data);
+    store.updateData(data);
   }
 
   handleFormSaved(data: any, response: any) {
     const {store} = this.props;
 
-    store.setFormData({
+    store.updateData({
       ...data,
       ...response
     });
@@ -551,7 +549,7 @@ export default class Dialog extends React.Component<DialogProps> {
         ) : null}
         {actions.map((action, key) =>
           render(`action/${key}`, action, {
-            data: store.formData,
+            data: store.data,
             onAction: this.handleAction,
             key,
             disabled: action.disabled || store.loading || !show
@@ -682,7 +680,7 @@ export default class Dialog extends React.Component<DialogProps> {
                 })
               )}
             >
-              {filter(__(title), store.formData)}
+              {filter(__(title), store.data)}
             </div>
           </div>
         ) : title ? (
@@ -712,7 +710,7 @@ export default class Dialog extends React.Component<DialogProps> {
               </a>
             ) : null}
             {render('title', title, {
-              data: store.formData,
+              data: store.data,
               onAction: this.handleAction
             })}
           </div>
@@ -728,7 +726,6 @@ export default class Dialog extends React.Component<DialogProps> {
 
         {header
           ? render('header', header, {
-              data: store.formData,
               onAction: this.handleAction
             })
           : null}
@@ -978,7 +975,8 @@ export class DialogRenderer extends Dialog {
     action: ActionObject,
     data: object,
     throwErrors: boolean = false,
-    delegate?: IScopedContext
+    delegate?: IScopedContext,
+    rendererEvent?: RendererEvent<any>
   ) {
     const {onAction, store, onConfirm, env, dispatchEvent, onClose} =
       this.props;
@@ -987,6 +985,10 @@ export class DialogRenderer extends Dialog {
       return onAction
         ? onAction(e, action, data, throwErrors, delegate || this.context)
         : false;
+    }
+
+    if (rendererEvent?.pendingPromise.length) {
+      await rendererEvent.allDone();
     }
 
     const scoped = this.context as IScopedContext;
@@ -1095,7 +1097,7 @@ export class DialogRenderer extends Dialog {
       // do nothing
     } else if (action.actionType === 'ajax') {
       store.setCurrentAction(action, this.props.resolveDefinitions);
-      store
+      return store
         .saveRemote(action.api as string, data, {
           successMessage: action.messages && action.messages.success,
           errorMessage: action.messages && action.messages.failed

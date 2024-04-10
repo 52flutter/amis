@@ -464,7 +464,8 @@ export type TableRendererAction =
   | 'selectAll'
   | 'clearAll'
   | 'select'
-  | 'initDrag';
+  | 'initDrag'
+  | 'cancelDrag';
 
 export default class Table extends React.Component<TableProps, object> {
   static contextType = ScopedContext;
@@ -1264,7 +1265,8 @@ export default class Table extends React.Component<TableProps, object> {
     const unModifiedRows = store.rows
       .filter(item => !item.modified)
       .map(item => item.data);
-    onSave(
+
+    return onSave(
       rows,
       diff,
       rowIndexes,
@@ -2990,8 +2992,7 @@ export class TableRenderer extends Table {
   ) {
     const {store, valueField, data} = this.props;
 
-    const actionType = action?.actionType as string;
-
+    const actionType = action?.actionType;
     switch (actionType) {
       case 'selectAll':
         store.clear();
@@ -3013,8 +3014,10 @@ export class TableRenderer extends Table {
         );
         break;
       case 'initDrag':
+        store.startDragging();
+        break;
+      case 'cancelDrag':
         store.stopDragging();
-        store.toggleDragging();
         break;
       case 'submitQuickEdit':
         this.handleSave();

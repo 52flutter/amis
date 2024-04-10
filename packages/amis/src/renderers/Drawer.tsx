@@ -6,7 +6,8 @@ import {
   isPureVariable,
   resolveVariableAndFilter,
   setThemeClassName,
-  ValidateError
+  ValidateError,
+  RendererEvent
 } from 'amis-core';
 import {Renderer, RendererProps} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
@@ -419,7 +420,7 @@ export default class Drawer extends React.Component<DrawerProps> {
   handleFormInit(data: any) {
     const {store} = this.props;
 
-    store.setFormData(data);
+    store.updateData(data);
   }
 
   handleFormChange(data: any, name?: string) {
@@ -431,13 +432,13 @@ export default class Drawer extends React.Component<DrawerProps> {
       };
     }
 
-    store.setFormData(data);
+    store.updateData(data);
   }
 
   handleFormSaved(data: any, response: any) {
     const {store} = this.props;
 
-    store.setFormData({
+    store.updateData({
       ...data,
       ...response
     });
@@ -547,7 +548,6 @@ export default class Drawer extends React.Component<DrawerProps> {
         {actions.map((action, key) =>
           render(`action/${key}`, action, {
             onAction: this.handleAction,
-            data: store.formData,
             key,
             disabled: action.disabled || store.loading
           })
@@ -678,7 +678,6 @@ export default class Drawer extends React.Component<DrawerProps> {
                 )}
               >
                 {render('title', title, {
-                  data: store.formData,
                   onConfirm: this.handleDrawerConfirm,
                   onClose: this.handleDrawerClose,
                   onAction: this.handleAction
@@ -687,7 +686,6 @@ export default class Drawer extends React.Component<DrawerProps> {
             ) : null}
             {header
               ? render('header', header, {
-                  data: store.formData,
                   onConfirm: this.handleDrawerConfirm,
                   onClose: this.handleDrawerClose,
                   onAction: this.handleAction
@@ -930,7 +928,8 @@ export class DrawerRenderer extends Drawer {
     action: ActionObject,
     data: object,
     throwErrors: boolean = false,
-    delegate?: IScopedContext
+    delegate?: IScopedContext,
+    rendererEvent?: RendererEvent<any>
   ) {
     const {onClose, onAction, store, env, dispatchEvent} = this.props;
 
@@ -939,6 +938,10 @@ export class DrawerRenderer extends Drawer {
       return onAction
         ? onAction(e, action, data, throwErrors, delegate || this.context)
         : false;
+    }
+
+    if (rendererEvent?.pendingPromise.length) {
+      await rendererEvent.allDone();
     }
 
     const scoped = this.context as IScopedContext;

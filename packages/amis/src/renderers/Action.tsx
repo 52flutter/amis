@@ -10,13 +10,13 @@ import {
   RendererProps,
   ScopedContext,
   uuid,
-  setThemeClassName
+  setThemeClassName,
+  RendererEvent
 } from 'amis-core';
 import {filter} from 'amis-core';
 import {BadgeObject, Button, SpinnerExtraProps} from 'amis-ui';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
-import Popconfirm from '../components/popconfirm/popconfirm';
 
 export interface ButtonSchema extends BaseSchema {
   /**
@@ -464,6 +464,7 @@ import {ToastSchemaBase} from '../Schema';
 import {withBadge, Icon} from 'amis-ui';
 import {normalizeApi, str2AsyncFunction} from 'amis-core';
 import {TooltipWrapper} from 'amis-ui';
+import Popconfirm from '../components/popconfirm/popconfirm';
 
 // 构造一个假的 React 事件避免可能的报错，主要用于快捷键功能
 // 来自 https://stackoverflow.com/questions/27062455/reactjs-can-i-create-my-own-syntheticevent
@@ -602,7 +603,6 @@ export class Action extends React.Component<ActionProps, ActionState> {
     if (typeof onClick === 'string') {
       onClick = str2AsyncFunction(onClick, 'event', 'props');
     }
-
     const result: any = onClick && (await onClick(e, this.props));
 
     if (
@@ -826,7 +826,6 @@ export class Action extends React.Component<ActionProps, ActionState> {
         )}
       />
     );
-
     const action = pick(this.props, ActionProps) as ActionSchema;
     const popconfirm =
       (action as any)?.confirmText && (action as any)?.popConfirm === true;
@@ -861,7 +860,7 @@ export class Action extends React.Component<ActionProps, ActionState> {
         }
         loadingClassName={loadingClassName}
         loading={loading}
-        onClick={this.handleAction}
+        onClick={popconfirm ? undefined : this.handleAction}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         type={type && ~allowedType.indexOf(type) ? type : 'button'}
@@ -897,8 +896,6 @@ export class Action extends React.Component<ActionProps, ActionState> {
         </Popconfirm>
       );
     }
-
-    // console.log('propconfirm', this.props, action);
     return (
       <>
         {content}
@@ -951,7 +948,10 @@ export type ActionRendererProps = RendererProps &
     onAction: (
       e: React.MouseEvent<any> | string | void | null,
       action: object,
-      data: any
+      data: any,
+      throwErrors?: boolean,
+      delegate?: IScopedContext,
+      rendererEvent?: RendererEvent<any>
     ) => void;
     btnDisabled?: boolean;
   };
@@ -961,18 +961,13 @@ export type ActionRendererProps = RendererProps &
 })
 // @ts-ignore 类型没搞定
 @withBadge
-export class ActionRenderer extends React.Component<
-  ActionRendererProps,
-  {loading: boolean}
-> {
+export class ActionRenderer extends React.Component<ActionRendererProps> {
   static contextType = ScopedContext;
 
   constructor(props: ActionRendererProps, scoped: IScopedContext) {
     super(props);
 
     scoped.registerComponent(this);
-
-    this.state = {loading: false};
   }
 
   componentWillUnmount() {
@@ -1001,74 +996,68 @@ export class ActionRenderer extends React.Component<
     e: React.MouseEvent<any> | string | void | null,
     action: any
   ) {
-    this.setState({loading: true});
-    try {
-      const {env, onAction, data, ignoreConfirm, dispatchEvent, $schema} =
-        this.props;
-      let mergedData = data;
+    const {env, onAction, data, ignoreConfirm, dispatchEvent, $schema} =
+      this.props;
+    let mergedData = data;
+    const popconfirm =
+      (action as any)?.confirmText && (action as any)?.popConfirm === true;
 
-      const popconfirm =
-        (action as any)?.confirmText && (action as any)?.popConfirm === true;
+    if (action?.actionType === 'click' && isObject(action?.args)) {
+      mergedData = createObject(data, action.args);
+    }
 
-      if (action?.actionType === 'click' && isObject(action?.args)) {
-        mergedData = createObject(data, action.args);
-      }
-
-      const hasOnEvent = $schema.onEvent && Object.keys($schema.onEvent).length;
-      let confirmText: string = '';
-      // 有些组件虽然要求这里忽略二次确认，但是如果配了事件动作还是需要在这里等待二次确认提交才可以
-      if (
-        (!ignoreConfirm || hasOnEvent) &&
-        !popconfirm &&
-        action.confirmText &&
-        env.confirm &&
-        (confirmText = filter(action.confirmText, mergedData))
-      ) {
-        let confirmed = await env.confirm(
-          confirmText,
-          filter(action.confirmTitle, mergedData) || undefined
-        );
-        if (confirmed) {
-          // 触发渲染器事件
-          const rendererEvent = await dispatchEvent(
-            e as React.MouseEvent<any> | string,
-            mergedData,
-            this // 保证renderer可以拿到，避免因交互设计导致的清空情况，例如crud内itemAction
-          );
-
-          // 阻止原有动作执行
-          if (rendererEvent?.prevented) {
-            this.setState({loading: false});
-            return;
-          }
-
-          // 因为crud里面也会处理二次确认，所以如果按钮处理过了就跳过crud的二次确认
-          onAction(e, {...action, ignoreConfirm: !!hasOnEvent}, mergedData);
-        } else if (action.countDown) {
-          this.setState({loading: false});
-          throw new Error('cancel');
-        }
-        this.setState({loading: false});
-      } else {
+    const hasOnEvent = $schema.onEvent && Object.keys($schema.onEvent).length;
+    let confirmText: string = '';
+    // 有些组件虽然要求这里忽略二次确认，但是如果配了事件动作还是需要在这里等待二次确认提交才可以
+    if (
+      (!ignoreConfirm || hasOnEvent) &&
+      !popconfirm &&
+      action.confirmText &&
+      env.confirm &&
+      (confirmText = filter(action.confirmText, mergedData))
+    ) {
+      let confirmed = await env.confirm(
+        confirmText,
+        filter(action.confirmTitle, mergedData) || undefined
+      );
+      if (confirmed) {
         // 触发渲染器事件
         const rendererEvent = await dispatchEvent(
           e as React.MouseEvent<any> | string,
-          mergedData
+          mergedData,
+          this // 保证renderer可以拿到，避免因交互设计导致的清空情况，例如crud内itemAction
         );
 
         // 阻止原有动作执行
         if (rendererEvent?.prevented) {
-          this.setState({loading: false});
           return;
         }
 
-        onAction(e, action, mergedData);
-
-        this.setState({loading: false});
+        // 因为crud里面也会处理二次确认，所以如果按钮处理过了就跳过crud的二次确认
+        onAction(
+          e,
+          {...action, ignoreConfirm: !!hasOnEvent},
+          mergedData,
+          undefined,
+          undefined,
+          rendererEvent
+        );
+      } else if (action.countDown) {
+        throw new Error('cancel');
       }
-    } catch (ex) {
-      this.setState({loading: false});
-      throw ex;
+    } else {
+      // 触发渲染器事件
+      const rendererEvent = await dispatchEvent(
+        e as React.MouseEvent<any> | string,
+        mergedData
+      );
+
+      // 阻止原有动作执行
+      if (rendererEvent?.prevented) {
+        return;
+      }
+
+      onAction(e, action, mergedData, undefined, undefined, rendererEvent);
     }
   }
 
@@ -1101,18 +1090,17 @@ export class ActionRenderer extends React.Component<
   }
 
   render() {
-    const {env, disabled, btnDisabled, ...rest} = this.props;
+    const {env, disabled, btnDisabled, loading, ...rest} = this.props;
 
     return (
       <Action
-        loading={this.state.loading}
         {...(rest as any)}
         env={env}
         disabled={disabled || btnDisabled}
         onAction={this.handleAction}
         onMouseEnter={this.handleMouseEnter}
         onMouseLeave={this.handleMouseLeave}
-        // loading={loading}
+        loading={loading}
         isCurrentUrl={this.isCurrentAction}
         tooltipContainer={rest.popOverContainer || env.getModalContainer}
       />

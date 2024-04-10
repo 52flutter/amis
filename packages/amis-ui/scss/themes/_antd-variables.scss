@@ -109,11 +109,9 @@ $ns: 'antd-';
   --colors-neutral-line-9: #f2f4f5;
   --colors-neutral-line-10: #f7f9fa;
   --colors-neutral-line-11: #ffffff;
-  --fonts-base-family: -apple-system, 'Noto Sans', 'Helvetica Neue', Helvetica,
-    'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB',
-    'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN',
-    'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti',
-    SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;
+  --fonts-base-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --fonts-size-1: 48px;
   --fonts-size-2: 40px;
   --fonts-size-3: 32px;

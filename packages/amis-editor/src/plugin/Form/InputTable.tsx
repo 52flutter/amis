@@ -1153,6 +1153,11 @@ export class TableControlPlugin extends BasePlugin {
       actionType: 'initDrag',
       actionLabel: '开启排序',
       description: '开启表格拖拽排序功能'
+    },
+    {
+      actionType: 'cancelDrag',
+      actionLabel: '取消排序',
+      description: '取消表格拖拽排序功能'
     }
   ];
 

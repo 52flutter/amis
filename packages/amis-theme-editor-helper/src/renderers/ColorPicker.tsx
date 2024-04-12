@@ -739,6 +739,7 @@ function ImageInput(props: ThemeColorProps) {
         {
           type: imageType || 'input-image',
           receiver,
+          asBase64: true,
           name: 'image',
           onChange: (url: any) => {
             if (url) {

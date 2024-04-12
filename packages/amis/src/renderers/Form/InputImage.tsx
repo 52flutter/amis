@@ -305,6 +305,10 @@ export interface ImageControlSchema extends FormBaseControlSchema {
    * @default 可拖拽排序
    */
   draggableTip?: string;
+  /**
+   * 如果上传的文件比较小可以设置此选项来简单的把文件 base64 的值给 form 一起提交，目前不支持多选。
+   */
+  asBase64?: boolean;
 }
 
 let preventEvent = (e: any) => e.stopPropagation();
@@ -400,7 +404,8 @@ export default class ImageControl extends React.Component<
     multiple: false,
     capture: undefined,
     dropCrop: true,
-    initAutoFill: true
+    initAutoFill: true,
+    asBase64: false
   };
 
   static valueToFile(
@@ -1279,6 +1284,7 @@ export default class ImageControl extends React.Component<
     onProgress: (progress: number) => void
   ) {
     const __ = this.props.translate;
+
     this._send(file, this.props.receiver as string, {}, onProgress)
       .then(async (ret: Payload) => {
         if (ret.status && (ret as any).status !== '0') {
@@ -1320,6 +1326,24 @@ export default class ImageControl extends React.Component<
     params: object,
     onProgress: (progress: number) => void
   ): Promise<Payload> {
+    if (this.props.asBase64) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          resolve({
+            status: 0,
+            data: {value: reader.result as string},
+            ok: true,
+            msg: ''
+          });
+        };
+        reader.onerror = (error: any) => {
+          resolve({status: 1, ok: false, data: error, msg: ''});
+        };
+        return;
+      });
+    }
     const fd = new FormData();
     const data = this.props.data;
     const api = buildApi(receiver, createObject(data, params), {

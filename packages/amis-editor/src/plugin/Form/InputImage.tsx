@@ -284,6 +284,11 @@ export class ImageControlPlugin extends BasePlugin {
                 label: '隐藏上传按钮',
                 value: false
               }),
+              getSchemaTpl('switch', {
+                name: 'asBase64',
+                label: 'Base64上传',
+                value: false
+              }),
 
               getSchemaTpl('switch', {
                 name: 'autoUpload',

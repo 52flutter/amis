@@ -6,7 +6,9 @@ import {
   RendererProps,
   runActions,
   CustomStyle,
-  setThemeClassName
+  setThemeClassName,
+  ActionObject,
+  RendererData
 } from 'amis-core';
 import {filter} from 'amis-core';
 import {autobind, createObject} from 'amis-core';
@@ -64,6 +66,7 @@ export interface IFrameProps
 
 export default class IFrame extends React.Component<IFrameProps, object> {
   IFrameRef: React.RefObject<HTMLIFrameElement> = React.createRef();
+
   static propsList: Array<string> = ['src', 'className'];
   static defaultProps: Partial<IFrameProps> = {
     className: '',
@@ -72,7 +75,8 @@ export default class IFrame extends React.Component<IFrameProps, object> {
 
   state = {
     width: this.props.width || '100%',
-    height: this.props.height || '100%'
+    height: this.props.height || '100%',
+    key: 1
   };
 
   componentDidMount() {
@@ -261,6 +265,7 @@ export default class IFrame extends React.Component<IFrameProps, object> {
     return (
       <>
         <iframe
+          key={`${this.state.key}`}
           name={name}
           className={cx(
             'IFrame',
@@ -317,6 +322,20 @@ export class IFrameRenderer extends IFrame {
 
     const scoped = context;
     scoped.registerComponent(this);
+  }
+
+  @autobind
+  doAction(action: ActionObject, ctx: RendererData) {
+    const actionType = action.actionType as string;
+
+    if (actionType === 'reload') {
+      this.setState(pre => {
+        return {
+          ...pre,
+          key: (pre as any).key + 1
+        };
+      });
+    }
   }
 
   componentWillUnmount() {

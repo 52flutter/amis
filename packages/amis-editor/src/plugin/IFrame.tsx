@@ -1,4 +1,4 @@
-import {registerEditorPlugin} from 'amis-editor-core';
+import {RendererPluginAction, registerEditorPlugin} from 'amis-editor-core';
 import {
   BasePlugin,
   RegionConfig,
@@ -33,6 +33,14 @@ export class IFramePlugin extends BasePlugin {
 
   panelTitle = 'iFrame';
   panelJustify = true;
+
+  actions: RendererPluginAction[] = [
+    {
+      actionType: 'reload',
+      actionLabel: '重新加载',
+      description: '重新加载'
+    }
+  ];
 
   panelBodyCreator = (context: BaseEventContext) => {
     return getSchemaTpl('tabs', [

@@ -1100,13 +1100,13 @@ export class TableControlPlugin extends BasePlugin {
             label: '删除范围',
             size: 'lg',
             placeholder: '请输入行号，输入多个则用英文逗号分隔',
-            hiddenOn: 'data.__deleteType !== "rowIndex"'
+            hiddenOn: 'this.__deleteType !== "rowIndex"'
           },
           getSchemaTpl('formulaControl', {
             name: 'condition',
             variables: '${variables}',
             label: '删除条件',
-            hiddenOn: 'data.__deleteType !== "conditionExpression"',
+            hiddenOn: 'this.__deleteType !== "conditionExpression"',
             mode: 'horizontal',
             required: true,
             horizontal: {

@@ -2665,6 +2665,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       headerToolbarRender,
       footerToolbarRender,
       testIdBuilder,
+      id,
       ...rest
     } = this.props;
 
@@ -2675,6 +2676,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
           'is-mobile': isMobile()
         })}
         style={style}
+        data-id={id}
         {...testIdBuilder?.getChild('wrapper').getTestId()}
       >
         {filter && (!store.filterTogggable || store.filterVisible)
@@ -2819,7 +2821,7 @@ export class CRUDRenderer extends CRUD {
     if (args?.index || args?.condition) {
       // 局部刷新
       // 由内容组件去实现
-      return this.control?.reload('', query, ctx, args);
+      return this.control?.reload('', query, ctx, undefined, undefined, args);
     } else if (subpath) {
       return scoped.reload(
         query ? `${subpath}?${qsstringify(query)}` : subpath,

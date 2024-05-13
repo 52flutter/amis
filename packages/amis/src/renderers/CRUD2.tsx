@@ -1058,23 +1058,35 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
       // @ts-ignore
       return this[`handle${upperFirst(action.actionType)}`](data);
     }
-    // const {onAction, data: ctx} = this.props;
-    // return this.props.onAction?.(
-    //   undefined,
-    //   action,
-    //   ctx,
-    //   throwErrors,
-    //   undefined
-    // );
   }
 
   @autobind
   handleAction(
     e: React.UIEvent<any> | undefined,
     action: ActionObject,
-    ctx: object
+    ctx: object,
+    throwErrors: boolean = false,
+    delegate?: IScopedContext
   ) {
-    return this.doAction(action, ctx);
+    if (
+      [
+        'stopAutoRefresh',
+        'reload',
+        'search',
+        'startAutoRefresh',
+        'loadMore'
+      ].includes(action.actionType as any)
+    ) {
+      return this.doAction(action, ctx, throwErrors);
+    } else {
+      return this.props.onAction(
+        e,
+        action,
+        ctx,
+        throwErrors,
+        delegate || this.context
+      );
+    }
   }
 
   unSelectItem(item: any, index: number) {
@@ -1374,6 +1386,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
       footerToolbarClassName,
       showIndex,
       testid,
+      id,
       ...rest
     } = this.props;
 
@@ -1398,6 +1411,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
           'is-loading': store.loading
         })}
         style={style}
+        data-id={id}
       >
         {this.props.filterMode && this.props.filterMode !== 'top' ? (
           <div

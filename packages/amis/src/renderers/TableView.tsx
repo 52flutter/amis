@@ -288,10 +288,11 @@ export default class TableView extends React.Component<TableViewProps, object> {
       env,
       themeCss,
       testid,
-      baseControlClassName
+      baseControlClassName,
+      style
     } = this.props;
 
-    return (
+    const renderNode = (
       <table
         className={cx(
           'TableView',
@@ -310,6 +311,7 @@ export default class TableView extends React.Component<TableViewProps, object> {
           })
         )}
         style={{width: width, borderCollapse: 'collapse'}}
+        data-id={id}
       >
         {this.renderCaption()}
         {this.renderCols()}
@@ -330,6 +332,16 @@ export default class TableView extends React.Component<TableViewProps, object> {
         />
       </table>
     );
+
+    if (style && Object.keys(style).length) {
+      return (
+        <div className="ae-TableViewEditor" style={style}>
+          {renderNode}
+        </div>
+      );
+    }
+
+    return renderNode;
   }
 }
 

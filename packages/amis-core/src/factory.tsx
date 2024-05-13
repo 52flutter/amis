@@ -272,7 +272,13 @@ export const defaultOptions: RenderOptions = {
       };
       socket.onerror = onError;
       return {
-        close: socket.close
+        close: () => {
+          try {
+            socket.close();
+          } catch (ex) {
+            console.error('ws close error', ex);
+          }
+        }
       };
     } else {
       return {

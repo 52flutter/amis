@@ -355,7 +355,9 @@ export class Log extends React.Component<LogProps, LogState> {
       this.wsClose = env.wsFetcher(
         {url},
         (data: string) => {
-          this.addLines([typeof data === 'string' ? data : (data as any).data]);
+          const text = typeof data === 'string' ? data : (data as any).data;
+          const lines = text.split('\n');
+          this.addLines(lines);
         },
         error => {
           console.error(error);

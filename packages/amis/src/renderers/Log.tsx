@@ -3,12 +3,17 @@
  */
 import React from 'react';
 import {
+  ActionObject,
+  autobind,
   buildApi,
   isApiOutdated,
+  IScopedContext,
   isEffectiveApi,
   Renderer,
+  RendererData,
   RendererProps,
-  resolveVariableAndFilter
+  resolveVariableAndFilter,
+  ScopedContext
 } from 'amis-core';
 import {BaseSchema} from '../Schema';
 import {Icon, SearchBox, VirtualList} from 'amis-ui';
@@ -97,6 +102,13 @@ export interface LogSchema extends BaseSchema {
    * credentials 配置
    */
   credentials?: string;
+
+  replaceTexts?: string[];
+
+  /**
+   * 支持ws
+   */
+  ws?: boolean;
 }
 
 export interface LogProps
@@ -111,6 +123,7 @@ export interface LogState {
   refresh: boolean;
   showLineNumber: boolean;
   filterWord: string;
+  key: number;
 }
 
 export class Log extends React.Component<LogProps, LogState> {
@@ -134,7 +147,8 @@ export class Log extends React.Component<LogProps, LogState> {
     originLogs: [],
     refresh: true,
     showLineNumber: false,
-    filterWord: ''
+    filterWord: '',
+    key: 1
   };
 
   constructor(props: LogProps) {
@@ -150,6 +164,9 @@ export class Log extends React.Component<LogProps, LogState> {
         'scroll',
         this.pauseOrResumeScrolling
       );
+    }
+    if (this.wsClose?.close) {
+      this.wsClose.close();
     }
   }
 
@@ -181,12 +198,16 @@ export class Log extends React.Component<LogProps, LogState> {
     }
   }
 
-  componentDidUpdate(prevProps: LogProps) {
+  componentDidUpdate(prevProps: LogProps, preState: LogState) {
     if (this.autoScroll && this.logRef && this.logRef.current) {
       this.logRef.current.scrollTop = this.logRef.current.scrollHeight;
     }
 
     if (!this.props.source) {
+      return;
+    }
+    if (this.state.key !== preState.key) {
+      this.loadLogs();
       return;
     }
 
@@ -272,6 +293,14 @@ export class Log extends React.Component<LogProps, LogState> {
 
   addLines = (lines: string[]) => {
     lines = lines.concat();
+
+    if (this.props.replaceTexts?.length) {
+      this.props.replaceTexts.forEach(item => {
+        lines = lines.map(p => {
+          return p.replaceAll(item, '');
+        });
+      });
+    }
     const {maxLength} = this.props;
     let lastLine = this.lastLine || '';
     let logs = (this.logs || []).concat();
@@ -296,6 +325,7 @@ export class Log extends React.Component<LogProps, LogState> {
     }
   };
 
+  wsClose?: {close: () => void};
   async loadLogs() {
     const {
       source,
@@ -304,11 +334,33 @@ export class Log extends React.Component<LogProps, LogState> {
       translate: __,
       encoding,
       maxLength,
-      credentials = 'include'
+      credentials = 'include',
+      ws
     } = this.props;
     // 因为这里返回结果是流式的，和普通 api 请求不一样，如果直接用 fetcher 经过 responseAdaptor 可能会导致出错，所以就直接 fetch 了
     const api = buildApi(source, data);
     if (!api.url) {
+      return;
+    }
+    if (this.wsClose?.close) {
+      this.wsClose.close();
+    }
+    if (ws === true) {
+      //
+      let url = api.url;
+      if (!url.startsWith('http')) {
+        url = window.location.origin + url;
+      }
+      url = url.replace('http', 'ws');
+      this.wsClose = env.wsFetcher(
+        {url},
+        (data: string) => {
+          this.addLines([typeof data === 'string' ? data : (data as any).data]);
+        },
+        error => {
+          console.error(error);
+        }
+      ) as any;
       return;
     }
     const res = await fetch(api.url, {
@@ -547,4 +599,32 @@ export class Log extends React.Component<LogProps, LogState> {
 @Renderer({
   type: 'log'
 })
-export class LogRenderer extends Log {}
+export class LogRenderer extends Log {
+  static contextType = ScopedContext;
+
+  constructor(props: LogProps, context: IScopedContext) {
+    super(props);
+
+    const scoped = context;
+    scoped.registerComponent(this);
+  }
+
+  @autobind
+  doAction(action: ActionObject, ctx: RendererData) {
+    const actionType = action.actionType as string;
+
+    if (actionType === 'reload') {
+      this.setState(pre => {
+        return {
+          ...pre,
+          key: (pre as any).key + 1
+        };
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    const scoped = this.context as IScopedContext;
+    scoped.unRegisterComponent(this);
+  }
+}

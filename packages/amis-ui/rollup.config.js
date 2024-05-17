@@ -35,7 +35,8 @@ const external = id =>
         'markdown-it-html5-media',
         'mdurl',
         'uc.micro',
-        'entities'
+        'entities',
+        'pdfjs-dist'
       ])
       .map(value =>
         value.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&').replace(/-/g, '\\x2d')

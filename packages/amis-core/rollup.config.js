@@ -39,7 +39,8 @@ const external = id => {
         'prop-types',
         'markdown-it-html5-media',
         'mdurl',
-        'uc.micro'
+        'uc.micro',
+        '@rc-component/mini-decimal'
       ])
       .map(value =>
         value.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&').replace(/-/g, '\\x2d')

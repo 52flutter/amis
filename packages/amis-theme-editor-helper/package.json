@@ -31,7 +31,8 @@
   "dependencies": {
     "amis": "*",
     "amis-core": "*",
-    "amis-ui": "*"
+    "amis-ui": "*",
+    "style-inject": "^0.3.0"
   },
   "devDependencies": {
     "@rollup/plugin-url": "^7.0.0",

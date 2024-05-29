@@ -1387,6 +1387,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
       showIndex,
       testid,
       id,
+      testIdBuilder,
       ...rest
     } = this.props;
 
@@ -1412,6 +1413,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
         })}
         style={style}
         data-id={id}
+        {...testIdBuilder?.getTestId()}
       >
         {this.props.filterMode && this.props.filterMode !== 'top' ? (
           <div
@@ -1424,12 +1426,18 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
             <div className={cx('Crud2-headerToolbar')}>
               {this.renderToolbar('headerToolbar', headerToolbar)}
             </div>
-            <div className={cx('Crud2-filter')}>
+            <div
+              className={cx('Crud2-filter')}
+              {...testIdBuilder?.getChild('filter').getTestId()}
+            >
               {this.renderFilter(filterSchema)}
             </div>
           </div>
         ) : (
-          <div className={cx('Crud2-filter')}>
+          <div
+            className={cx('Crud2-filter')}
+            {...testIdBuilder?.getChild('filter').getTestId()}
+          >
             {this.renderFilter(filterSchema)}
             <div className={cx('Crud2-toolbar', headerToolbarClassName)}>
               {this.renderToolbar('headerToolbar', headerToolbar)}
@@ -1473,6 +1481,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
             maxKeepItemSelectionLength,
             // valueField: valueField || primaryField,
             primaryField: primaryField,
+            testIdBuilder,
             items: store.data.items,
             query: store.query,
             orderBy: store.query.orderBy,

@@ -147,7 +147,12 @@ export function buildApi(
         ? {
             ...(api as ApiObject)?.qsOptions,
             filter: (key: string, value: any) => {
-              return value === '' ? undefined : value;
+              return value === ''
+                ? undefined
+                : // qs源码中有filter后，不会默认使用serializeDate处理date类型
+                value instanceof Date
+                ? Date.prototype.toISOString.call(value)
+                : value;
             }
           }
         : (api as ApiObject)?.qsOptions

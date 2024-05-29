@@ -16,7 +16,6 @@ import {
   SchemaExpression,
   position,
   animation,
-  evalExpressionWithConditionBuilder,
   isEffectiveApi,
   Renderer,
   RendererProps,
@@ -1728,7 +1727,8 @@ export default class Table extends React.Component<TableProps, object> {
       query,
       data,
       autoGenerateFilter,
-      testIdBuilder
+      testIdBuilder,
+      filterCanAccessSuperData = true
     } = this.props;
 
     const searchableColumns = store.searchableColumns;
@@ -1743,6 +1743,7 @@ export default class Table extends React.Component<TableProps, object> {
         translate={__}
         classnames={cx}
         render={render}
+        canAccessSuperData={filterCanAccessSuperData}
         autoGenerateFilter={autoGenerateFilter}
         onSearchableFromReset={onSearchableFromReset}
         onSearchableFromSubmit={onSearchableFromSubmit}

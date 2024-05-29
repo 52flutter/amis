@@ -2,13 +2,7 @@ import React from 'react';
 import isEqual from 'lodash/isEqual';
 import pickBy from 'lodash/pickBy';
 import omitBy from 'lodash/omitBy';
-import {
-  Renderer,
-  RendererProps,
-  evalExpressionWithConditionBuilder,
-  filterTarget,
-  mapTree
-} from 'amis-core';
+import {Renderer, RendererProps, filterTarget, mapTree} from 'amis-core';
 import {SchemaNode, Schema, ActionObject, PlainObject} from 'amis-core';
 import {CRUDStore, ICRUDStore, getMatchedEventTargets} from 'amis-core';
 import {
@@ -2666,6 +2660,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
       footerToolbarRender,
       testIdBuilder,
       id,
+      filterCanAccessSuperData = true,
       ...rest
     } = this.props;
 
@@ -2702,7 +2697,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                 onSubmit: this.handleFilterSubmit,
                 onInit: this.handleFilterInit,
                 formStore: undefined,
-                canAccessSuperData: false
+                canAccessSuperData: filterCanAccessSuperData
               }
             )
           : null}
@@ -2726,6 +2721,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             className: cx('Crud-body', bodyClassName),
             ref: this.controlRef,
             autoGenerateFilter: !filter && autoGenerateFilter,
+            filterCanAccessSuperData,
             autoFillHeight: autoFillHeight,
             selectable: !!(
               (this.hasBulkActionsToolbar() && this.hasBulkActions()) ||

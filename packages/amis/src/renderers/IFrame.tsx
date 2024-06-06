@@ -341,5 +341,6 @@ export class IFrameRenderer extends IFrame {
   componentWillUnmount() {
     const scoped = this.context as IScopedContext;
     scoped.unRegisterComponent(this);
+    super.componentWillUnmount();
   }
 }

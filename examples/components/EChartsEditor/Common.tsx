@@ -268,7 +268,7 @@ export const viewportControl = (
 ) => {
   return [
     {
-      type: 'button-group',
+      type: 'button-group-select',
       name: name,
       label: labelForRadio,
       options: [
@@ -1182,7 +1182,7 @@ const buildOneOption = (scope: string, name: string, option: any) => {
     // TODO: 可能需要特殊处理
     // return vector(name, label, '单独设置', remark);
   } else if (uiControlType === 'text') {
-    // return text(name, label, remark, uiControl.default);
+    return text(name, label, remark, uiControl.default);
   } else {
     console.warn('unknow type', name, uiControlType);
   }

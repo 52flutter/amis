@@ -4,7 +4,7 @@
 import {hasIcon, mapObject, utils} from 'amis';
 import type {PlainObject, Schema, SchemaNode} from 'amis';
 import {getGlobalData} from 'amis-theme-editor-helper';
-import {isExpression, resolveVariableAndFilter} from 'amis-core';
+import {mapTree, isExpression, resolveVariableAndFilter} from 'amis-core';
 import type {VariableItem} from 'amis-ui';
 import {isObservable, reaction} from 'mobx';
 import DeepDiff, {Diff} from 'deep-diff';
@@ -1333,7 +1333,7 @@ export async function getVariables(that: any) {
     let vars = await resolveVariablesFromScope(node, manager);
     if (Array.isArray(vars)) {
       if (!that.isUnmount) {
-        variablesArr = vars;
+        variablesArr = filterVariablesOfScope(vars);
       }
     }
   }
@@ -1362,65 +1362,101 @@ export async function getVariables(that: any) {
   return variablesArr;
 }
 
-export async function getQuickVariables(
-  that: any,
-  resolver?: (vars: any[]) => any[]
-) {
+function filterVariablesOfScope(options: any[]) {
+  const curOptions = options.find(i => i.label === '组件上下文');
+  const arr = curOptions?.children || [];
+  const variables = mapTree(arr, (item: any) => {
+    // 子表过滤成员那层
+    if (item.type === 'array' && Array.isArray(item.children)) {
+      if (item.children.length === 1) {
+        const child = item.children[0];
+        if (child.type === 'object' && child.disabled) {
+          return {
+            ...item,
+            children: child.children
+          };
+        }
+      }
+    }
+    return item;
+  });
+  return variables;
+}
+
+export async function getQuickVariables(that: any) {
   const {node, manager} = that.props.formProps || that.props;
-  const selfName = that.props?.data?.name;
+  const {quickVars, data} = that.props;
+  const selfName = data?.name;
   await manager?.getContextSchemas(node);
   const options = await manager?.dataSchema?.getDataPropsAsOptions();
   if (Array.isArray(options)) {
-    const vars = options.find(item => item.label === '组件上下文');
-    if (vars?.children?.length) {
-      // 获取当前层的变量
-      const current: any[] = vars.children[0].children || [];
-      const filterVars = current
-        .filter(item => item.value !== selfName && item.schemaType)
-        .map(item => {
-          // 子表过滤成员那层
-          if (item.type === 'array' && Array.isArray(item.children)) {
-            if (item.children.length === 1) {
-              const child = item.children[0];
-              if (child.type === 'object' && child.disabled) {
-                return {
-                  ...item,
-                  children: child.children
-                };
-              }
-            }
-          }
-          return item;
-        });
-
-      return resolver ? resolver(filterVars) : filterVars;
-    }
+    const curOptions = filterVariablesOfScope(options);
+    console.log(curOptions);
+    return resolveQuickVariables(curOptions, quickVars, selfName);
   }
 
   return [];
 }
 
-export function resolveQuickVariablesByType(
-  variables: VariableItem[],
-  quickVars?: VariableItem[]
+export function resolveQuickVariables(
+  options: any,
+  quickVars?: VariableItem[],
+  selfName?: string
 ) {
+  if (!Array.isArray(options)) {
+    return [];
+  }
+  const finalVars = [];
+  const curOption = options[0];
+  const superOption = options[1];
+  const variables = (curOption.children || [])
+    .filter((item: any) => item.value !== selfName && item.schemaType)
+    .map((item: any) => {
+      // 子表过滤成员那层
+      if (item.type === 'array' && Array.isArray(item.children)) {
+        if (item.children.length === 1) {
+          const child = item.children[0];
+          if (child.type === 'object' && child.disabled) {
+            return {
+              ...item,
+              children: child.children
+            };
+          }
+        }
+      }
+      return item;
+    });
+  if (superOption?.children?.length) {
+    const superVars = superOption?.children.filter(
+      (item: any) => item.schemaType && item.type !== 'array'
+    );
+    finalVars.push(...superVars);
+    finalVars.push({
+      label: curOption.label,
+      children: variables
+    });
+  } else {
+    finalVars.push(...variables);
+  }
+
   if (quickVars?.length) {
     const vars: VariableItem[] = [];
     vars.push({
       label: '快捷变量',
+      type: 'quickVars',
       children: quickVars
     });
-    if (variables.length) {
+    if (finalVars.length) {
       vars.push({
         label: '表单变量',
-        children: variables
+        children: finalVars
       });
     }
 
     return vars;
   }
 
-  return variables;
+  return finalVars;
 }
 
 /**

@@ -55,6 +55,11 @@ export interface TplFormulaControlProps extends FormControlProps {
    * 支付支持快捷变量
    */
   quickVariables?: boolean;
+
+  /**
+   * 额外的快捷变量
+   */
+  quickVars?: Array<VariableItem>;
 }
 
 interface TplFormulaControlState {
@@ -148,7 +153,10 @@ export class TplFormulaControl extends React.Component<
 
     const variables = await getVariables(this);
     const quickVariables = await getQuickVariables(this);
-    this.setState({variables, quickVariables});
+    this.setState({
+      variables,
+      quickVariables
+    });
   }
 
   componentWillUnmount() {
@@ -378,7 +386,7 @@ export class TplFormulaControl extends React.Component<
 
   @autobind
   handleEditorMounted(cm: any, editor: any) {
-    const variables = this.props.variables || this.state.variables;
+    const variables = this.state.variables;
     this.editorPlugin = new FormulaPlugin(editor, {
       getProps: () => ({...this.props, variables}),
       onExpressionMouseEnter: this.onExpressionMouseEnter,
@@ -474,6 +482,7 @@ export class TplFormulaControl extends React.Component<
                     data={quickVariables}
                     onSelect={this.handleQuickVariableSelect}
                     popOverContainer={popOverContainer}
+                    simplifyMemberOprs
                   />
                 </ul>
               );

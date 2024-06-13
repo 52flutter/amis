@@ -132,8 +132,10 @@ class CollapseGroup extends React.Component<
         collapsed,
         expandIcon: this.props.expandIcon,
         propsUpdate: true,
-        onCollapse: (collapsed: boolean) =>
-          this.collapseChange(collapseId, collapsed)
+        onCollapse: (collapsed: boolean) => {
+          if (typeof collapsed === 'boolean')
+            return this.collapseChange(collapseId, collapsed);
+        }
       });
     });
   };

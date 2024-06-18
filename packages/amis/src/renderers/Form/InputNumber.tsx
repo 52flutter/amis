@@ -213,7 +213,7 @@ export default class NumberControl extends React.Component<
         toFixed(value.toString(), '.', normalizedPrecision)
       );
 
-      if (!isNaN(normalizedValue)) {
+      if (!isNaN(normalizedValue) && normalizedValue !== value) {
         setPrinstineValue(normalizedValue);
       }
     }
@@ -488,6 +488,8 @@ export default class NumberControl extends React.Component<
     const finalValue =
       unit && value && typeof value === 'string'
         ? value.replace(unit, '')
+        : isNaN(value)
+        ? void 0
         : value;
 
     return (

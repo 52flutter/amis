@@ -330,7 +330,6 @@ export async function exportExcel(
   const worksheet = workbook.addWorksheet('sheet', {
     properties: {defaultColWidth: 15}
   });
-  worksheet.views = [{state: 'frozen', xSplit: 0, ySplit: 1}];
 
   let exportColumnNames = toolbar.columns;
 
@@ -354,7 +353,7 @@ export async function exportExcel(
   }
 
   /** 如果非自定义导出列配置，则默认不导出操作列 */
-  const filteredColumns = exportColumnNames
+  let filteredColumns = exportColumnNames
     ? columns.filter(column => {
         const filterColumnsNames = exportColumnNames!;
         if (column.name && filterColumnsNames.indexOf(column.name) !== -1) {
@@ -367,16 +366,30 @@ export async function exportExcel(
   const firstRowLabels = filteredColumns.map(column => {
     return filter(column.label, data);
   });
-  const firstRow = worksheet.getRow(1);
-  firstRow.values = firstRowLabels;
+
+  // 数据从第二行开始
+  let rowIndex = getTreeDepth(filteredColumns) || 1;
+  // 分割线从表头结束行开始
+  worksheet.views = [{state: 'frozen', xSplit: 0, ySplit: rowIndex}];
+  if (rowIndex > 1) {
+    // 处理多表头
+    filteredColumns = groupHead(worksheet, filteredColumns);
+  } else {
+    // 单表头按照原来逻辑
+    // 获取sheet第一行作为表头
+    const firstRow = worksheet.getRow(1);
+    // 给表头赋值
+    firstRow.values = firstRowLabels;
+  }
+  // 增加过滤功能
   worksheet.autoFilter = {
     from: {
-      row: 1,
+      row: rowIndex,
       column: 1
     },
     to: {
-      row: 1,
-      column: firstRowLabels.length
+      row: rowIndex,
+      column: filteredColumns.length
     }
   };
 
@@ -392,8 +405,6 @@ export async function exportExcel(
   }
   // 用于 mapping source 的情况
   const remoteMappingCache: any = {};
-  // 数据从第二行开始
-  let rowIndex = 1;
   if (toolbar.rowSlice) {
     rows = arraySlice(rows, toolbar.rowSlice);
   }
@@ -671,4 +682,183 @@ async function exportExcelWithoutData(
   }
 
   downloadFile(workbook, filename);
+}
+
+// 处理多表头的导出
+export function groupHead(
+  worksheet: {
+    addRow: (arg0: string[]) => any;
+    mergeCells: (arg0: any, arg1: any, arg2: number, arg3: number) => void;
+    getCell: (arg0: any, arg1: any) => any;
+  },
+  sourceColumns: any[]
+) {
+  const ans: any = {};
+
+  const allLeafNode: any[] = [];
+  function deepChild(
+    node: any,
+    deep = 0,
+    callBack?: (item: any, level: number) => void
+  ) {
+    callBack && callBack(node, deep);
+    if (node.children) {
+      node.children.forEach((p: any) => {
+        deepChild(p as any, deep + 1, callBack);
+      });
+    }
+  }
+  function getMaxDepthByKey(treeData: any[]) {
+    for (const item of treeData) {
+      getDepth(item);
+    }
+    function getDepth(obj: any) {
+      if (
+        obj.hidden !== true &&
+        obj.export !== false &&
+        !obj.children?.length
+      ) {
+        allLeafNode.push(obj);
+      }
+      // eslint-disable-next-line no-prototype-builtins
+      if (obj.hasOwnProperty('children')) {
+        ans[obj.key] = 0;
+        for (const item of obj.children) {
+          // 父级隐藏需要把子级也隐藏了
+          if (obj.hidden) {
+            item.hidden = obj.hidden;
+          }
+          item.parentKey = obj.key;
+
+          if (item.hidden !== true && item.export !== false) {
+            ans[obj.key] = Math.max(ans[obj.key], getDepth(item) + 1);
+          }
+        }
+        return ans[obj.key];
+      } else {
+        ans[obj.key] = 0;
+        return 0;
+      }
+    }
+  }
+
+  const getAllLeafNode = (item: any) => {
+    const children: any[] = [];
+
+    deepChild(item, 0, (node, level) => {
+      if (
+        node?.hidden !== true &&
+        node?.export !== false &&
+        !node.children?.length
+      ) {
+        children.push(node);
+      }
+    });
+    return children;
+  };
+  const getWidth = (item: any) => {
+    const children = getAllLeafNode(item);
+    return children?.length;
+  };
+
+  getMaxDepthByKey(sourceColumns);
+
+  let maxLevel = 0;
+  Object.keys(ans).forEach(key => {
+    if (ans[key] > maxLevel) {
+      maxLevel = ans[key];
+    }
+  });
+  for (let i = 0; i < maxLevel; i++) {
+    const row = worksheet.addRow(
+      Array.from(Array(allLeafNode.length), () => '')
+    );
+    row.commit();
+  }
+  function renderChildrenCol(
+    children: string | any[],
+    level: number,
+    rowIndex: number,
+    cellIndex: number
+  ) {
+    let index = cellIndex;
+    for (let i = 0; i < children.length; i++) {
+      if (children[i]?.hidden !== true && children[i]?.export !== false) {
+        const colWith = getWidth(children[i]);
+        if (children[i]?.children?.length) {
+          try {
+            // 按开始行，开始列，结束行，结束列合并（相当于 K10:M12）
+            // 同一行
+            worksheet.mergeCells(
+              rowIndex,
+              index,
+              rowIndex,
+              colWith + index - 1
+            );
+          } catch (ex) {
+            /* empty */
+          }
+        } else {
+          try {
+            //跨行
+            worksheet.mergeCells(rowIndex, index, maxLevel + 1, index);
+          } catch (ex) {
+            /* empty */
+          }
+        }
+        const cell = worksheet.getCell(rowIndex, index);
+        cell.value = children[i].label;
+        const c = children[i];
+        const style = c.exportStyle ? c.exportStyle : {};
+        if (!style.font) {
+          style.font = {};
+        }
+        style.font.bold = true;
+        style.font.size = 12;
+        style.alignment = {
+          horizontal: c.align
+            ? c.align
+            : children[i]?.children?.length
+            ? 'center'
+            : 'left',
+          vertical: 'middle'
+        };
+        cell.style = style;
+        if (children[i]?.children) {
+          renderChildrenCol(
+            children[i]?.children,
+            level + 1,
+            rowIndex + 1,
+            index
+          );
+        }
+        index += colWith;
+      }
+    }
+    return index;
+  }
+  let width = 1;
+  sourceColumns.forEach((col, index) => {
+    renderChildrenCol([col], 0, 1, width);
+    const colWidth = getWidth(sourceColumns[index]);
+    width += colWidth;
+  });
+  return allLeafNode;
+}
+
+// 获取树的深度(表格头高度)
+export function getTreeDepth(treeData: any[]) {
+  if (!Array.isArray(treeData) || treeData.length === 0) {
+    return 0;
+  }
+  let maxDepth = 1;
+  treeData.forEach(node => {
+    if (node.children && node.children.length > 0) {
+      const depth = 1 + getTreeDepth(node.children);
+      if (depth > maxDepth) {
+        maxDepth = depth;
+      }
+    }
+  });
+  return maxDepth;
 }

@@ -256,14 +256,14 @@ export default class FormulaControl extends React.Component<
       .map(item => {
         if (item.children && item.type !== 'quickVars') {
           item.children = item.children.filter(
-            (i: any) => i.schemaType === rendererSchema.type
+            (i: any) => i.schemaType === rendererSchema?.type
           );
         }
         return item;
       })
       .filter(
         item =>
-          item.schemaType === rendererSchema.type ||
+          item.schemaType === rendererSchema?.type ||
           (item.children && item.children?.length)
       );
     return filterVars;

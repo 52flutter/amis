@@ -1379,6 +1379,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
       autoFillHeight,
       showSelection,
       headerToolbar,
+      headerToolbarRight,
       footerToolbar,
       // columnsTogglable 在本渲染器中渲染，不需要 table 渲染，避免重复
       // columnsTogglable,
@@ -1432,6 +1433,11 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
             >
               {this.renderFilter(filterSchema)}
             </div>
+            {headerToolbarRight && (
+              <div className={cx('Crud2-headerToolbar-right')}>
+                {this.renderToolbar('headerToolbarRight', headerToolbarRight)}
+              </div>
+            )}
           </div>
         ) : (
           <div
@@ -1442,6 +1448,11 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
             <div className={cx('Crud2-toolbar', headerToolbarClassName)}>
               {this.renderToolbar('headerToolbar', headerToolbar)}
             </div>
+            {headerToolbarRight && (
+              <div className={cx('Crud2-headerToolbar-right')}>
+                {this.renderToolbar('headerToolbarRight', headerToolbarRight)}
+              </div>
+            )}
           </div>
         )}
         {showSelection && keepItemSelectionOnPageChange && multiple !== false

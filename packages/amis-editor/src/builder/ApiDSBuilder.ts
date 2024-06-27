@@ -1452,6 +1452,29 @@ export class ApiDSBuilder extends DSBuilder<
         ? {filter: await this.buildCRUDFilterSchema(options, id)}
         : {}),
       headerToolbar: await this.buildHeaderToolbar(options, id),
+      headerToolbarRight: {
+        type: 'flex',
+        direction: 'row',
+        items: [
+          {
+            type: 'container',
+            align: 'left',
+            body: [],
+            wrapperBody: false,
+            style: {
+              flexGrow: 1,
+              flex: '1 1 auto',
+              position: 'static',
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'nowrap',
+              alignItems: 'stretch',
+              justifyContent: 'flex-start'
+            },
+            isFixedHeight: false
+          }
+        ]
+      },
       footerToolbar: this.buildFooterToolbar(options, id),
       columns: await this.buildCRUDColumnsSchema(options, id)
     };

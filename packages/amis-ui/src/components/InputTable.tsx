@@ -126,6 +126,9 @@ export function InputTable({
     },
     [subForms]
   );
+  const popOverContainer = React.useCallback(() => {
+    return tBodyRef.current;
+  }, [tBodyRef]);
   let finalRules: any = {...rules};
 
   if (isRequired) {
@@ -237,62 +240,66 @@ export function InputTable({
         <div
           className={cx(`Table-contentWrap`, {'is-fixed': enableScroll})}
           style={{maxHeight: enableScroll ? scroll.y : 'unset'}}
+          ref={tBodyRef}
         >
-          <table className={cx(`Table-table`, tableClassName)} ref={tableRef}>
-            <thead className={cx(tableHeadClassName)}>
-              <tr>
-                {columns.map((item, index) => (
-                  <th key={index} className={item.className}>
-                    {item.thRender ? item.thRender() : item.title}
-                  </th>
-                ))}
-                <th key="operation">{__('Table.operation')}</th>
-              </tr>
-            </thead>
-            <tbody className={cx(tableBodyClassName)}>
-              {fields.length ? (
-                fields.map((field, index) => (
-                  <tr key={field.id}>
-                    <InputTableRow
-                      key="columns"
-                      control={control}
-                      update={lightUpdate}
-                      index={index}
-                      value={field}
-                      columns={columns}
-                      translate={__}
-                      classnames={cx}
-                      formRef={subFormRef}
-                    />
-                    <td key="operation">
-                      <Button
-                        level="link"
-                        key="delete"
-                        disabled={
-                          removable === false ||
-                          !!(minLength && fields.length <= minLength)
-                        }
-                        className={cx('Table-delBtn')}
-                        onClick={() => remove(index)}
-                      >
-                        {__('delete')}
-                      </Button>
+          <div className={cx('Table-content')}>
+            <table className={cx(`Table-table`, tableClassName)} ref={tableRef}>
+              <thead className={cx(tableHeadClassName)}>
+                <tr>
+                  {columns.map((item, index) => (
+                    <th key={index} className={item.className}>
+                      {item.thRender ? item.thRender() : item.title}
+                    </th>
+                  ))}
+                  <th key="operation">{__('Table.operation')}</th>
+                </tr>
+              </thead>
+              <tbody className={cx(tableBodyClassName)}>
+                {fields.length ? (
+                  fields.map((field, index) => (
+                    <tr key={field.id}>
+                      <InputTableRow
+                        key="columns"
+                        control={control}
+                        update={lightUpdate}
+                        index={index}
+                        value={field}
+                        columns={columns}
+                        translate={__}
+                        classnames={cx}
+                        formRef={subFormRef}
+                        popOverContainer={popOverContainer}
+                      />
+                      <td key="operation">
+                        <Button
+                          level="link"
+                          key="delete"
+                          disabled={
+                            removable === false ||
+                            !!(minLength && fields.length <= minLength)
+                          }
+                          className={cx('Table-delBtn')}
+                          onClick={() => remove(index)}
+                        >
+                          {__('delete')}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length + 1}>
+                      <Icon
+                        icon="desk-empty"
+                        className={cx('Table-placeholder-empty-icon', 'icon')}
+                      />
+                      {placeholder ?? __('placeholder.noData')}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length + 1}>
-                    <Icon
-                      icon="desk-empty"
-                      className={cx('Table-placeholder-empty-icon', 'icon')}
-                    />
-                    {placeholder ?? __('placeholder.noData')}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
         {footer ? (
           <div className={cx(`InputTable-toolbar`)}>{footer?.()} </div>
@@ -331,6 +338,7 @@ export interface InputTableRowProps {
   translate: TranslateFn;
   classnames: ClassNamesFn;
   formRef: (form: UseFormReturn | null, id: string) => void;
+  popOverContainer?: any;
 }
 
 export const InputTableRow = React.memo(function InputTableRow({
@@ -340,7 +348,8 @@ export const InputTableRow = React.memo(function InputTableRow({
   translate,
   update,
   formRef,
-  classnames: cx
+  classnames: cx,
+  popOverContainer
 }: InputTableRowProps) {
   const indexRef = React.useRef(index);
   React.useEffect(() => {
@@ -361,7 +370,14 @@ export const InputTableRow = React.memo(function InputTableRow({
     <>
       {columns.map((item, colIndex) => (
         <td key={colIndex} className={item.className}>
-          {item.tdRender(methods, colIndex, index)}
+          {item.tdRender(
+            {
+              ...methods,
+              popOverContainer
+            },
+            colIndex,
+            index
+          )}
         </td>
       ))}
     </>

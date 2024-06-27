@@ -244,13 +244,13 @@ class CustomOptionControl extends React.Component<OptionSourceControlProps> {
 
   @autobind
   handleBatchAdd(values: {batchOption: string}[], action: any) {
-    const {onChange} = this.props;
+    const {onChange, customEdit = true} = this.props;
     const options = this.props.data.options || [];
     const addedOptions: Array<OptionControlItem> = values[0].batchOption
       .split('\n')
       .map(option => {
         const item = option.trim();
-        if (~item.indexOf(' ')) {
+        if (~item.indexOf(' ') && customEdit) {
           let [label, value] = item.split(' ');
           return {label: label.trim(), value: value.trim(), checked: false};
         }
@@ -268,7 +268,8 @@ class CustomOptionControl extends React.Component<OptionSourceControlProps> {
       editing,
       multipleProps,
       closeDefaultCheck,
-      hiddenOn
+      hiddenOn,
+      customEdit = true
     } = props;
     const {render, data: ctx, node} = this.props;
     const isMultiple = ctx?.multiple === true || multipleProps;
@@ -456,23 +457,31 @@ class CustomOptionControl extends React.Component<OptionSourceControlProps> {
               }
             }
           )}
-          {render(
-            'dropdown',
-            {
-              type: 'dropdown-button',
-              className: 'ae-OptionControlItem-dropdown',
-              btnClassName: 'px-2',
-              icon: 'fa fa-ellipsis-h',
-              hideCaret: true,
-              closeOnClick: true,
-              align: 'right',
-              menuClassName: 'ae-OptionControlItem-ulmenu',
-              buttons: operationBtn
-            },
-            {
-              popOverContainer: null // amis 渲染挂载节点会使用 this.target
-            }
-          )}
+          {customEdit
+            ? render(
+                'dropdown',
+                {
+                  type: 'dropdown-button',
+                  className: 'ae-OptionControlItem-dropdown',
+                  btnClassName: 'px-2',
+                  icon: 'fa fa-ellipsis-h',
+                  hideCaret: true,
+                  closeOnClick: true,
+                  align: 'right',
+                  menuClassName: 'ae-OptionControlItem-ulmenu',
+                  buttons: operationBtn
+                },
+                {
+                  popOverContainer: null // amis 渲染挂载节点会使用 this.target
+                }
+              )
+            : render('delete', {
+                type: 'button',
+                className: 'ae-OptionControlItem-action-delete',
+                icon: 'fa fa-trash',
+                level: 'link',
+                onClick: () => this.handleDelete(index)
+              })}
         </div>
         {editDom}
       </li>
@@ -480,6 +489,7 @@ class CustomOptionControl extends React.Component<OptionSourceControlProps> {
   }
 
   buildBatchAddSchema() {
+    const {customEdit = true} = this.props;
     return {
       type: 'action',
       actionType: 'dialog',
@@ -498,7 +508,11 @@ class CustomOptionControl extends React.Component<OptionSourceControlProps> {
             body: [
               {
                 type: 'tpl',
-                tpl: '每个选项单列一行，将所有值不重复的项加为新的选项;<br/>每行可通过空格来分别设置label和value,例："张三 zhangsan"'
+                tpl:
+                  '每个选项单列一行，将所有值不重复的项加为新的选项;' +
+                  (customEdit
+                    ? '<br/>每行可通过空格来分别设置label和value,例："张三 zhangsan"'
+                    : '')
               }
             ],
             showIcon: true,
@@ -541,7 +555,12 @@ class CustomOptionControl extends React.Component<OptionSourceControlProps> {
         {Array.isArray(options) && options.length ? (
           <ul className="ae-OptionControl-content" ref={this.dragRef}>
             {options.map((option, index) =>
-              this.renderOption({...option, index, multipleProps})
+              this.renderOption({
+                ...this.props,
+                ...option,
+                index,
+                multipleProps
+              })
             )}
           </ul>
         ) : (

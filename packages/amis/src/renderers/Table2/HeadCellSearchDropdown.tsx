@@ -152,15 +152,15 @@ export class HeadCellSearchDropDown extends React.Component<
             testid: testIdBuilder?.getChild('btn-reset')?.getTestIdValue()
           },
 
-          {
-            type: 'button',
-            label: __('cancel'),
-            actionType: 'cancel',
-            testid: testIdBuilder?.getChild('btn-cancel')?.getTestIdValue()
-          },
+          // {
+          //   type: 'button',
+          //   label: __('cancel'),
+          //   actionType: 'cancel',
+          //   testid: testIdBuilder?.getChild('btn-cancel')?.getTestIdValue()
+          // },
 
           {
-            label: __('search'),
+            label: __('CRUD.filter'),
             type: 'submit',
             primary: true,
             testid: testIdBuilder?.getChild('btn-search')?.getTestIdValue()
@@ -274,9 +274,9 @@ export class HeadCellSearchDropDown extends React.Component<
         active={isActive}
         filterIcon={
           <Icon
-            icon="search"
+            icon="antd-filter"
             className="icon"
-            iconContent="table-search-icon"
+            // iconContent="table-search-icon"
             testIdBuilder={testIdBuilder?.getChild('search-icon')}
           />
         }

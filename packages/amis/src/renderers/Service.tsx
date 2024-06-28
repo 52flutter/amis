@@ -1,7 +1,13 @@
 import React from 'react';
 import extend from 'lodash/extend';
 import cloneDeep from 'lodash/cloneDeep';
-import {Renderer, RendererProps, filterTarget} from 'amis-core';
+import {
+  Renderer,
+  RendererProps,
+  filterTarget,
+  setThemeClassName,
+  CustomStyle
+} from 'amis-core';
 import {ServiceStore, IServiceStore} from 'amis-core';
 import {Api, RendererData, ActionObject} from 'amis-core';
 import {filter, evalExpression} from 'amis-core';
@@ -808,54 +814,81 @@ export default class Service extends React.Component<ServiceProps> {
       classnames: cx,
       loadingConfig,
       showErrorMsg,
-      testIdBuilder
+      testIdBuilder,
+      wrapperCustomStyle,
+      id
     } = this.props;
 
     return (
-      <div
-        className={cx(`${ns}Service`, className)}
-        style={style}
-        {...testIdBuilder?.getTestId()}
-      >
-        {!env.forceSilenceInsideError &&
-        store.error &&
-        showErrorMsg !== false ? (
-          <Alert
-            level="danger"
-            showCloseButton
-            onClose={() => store.updateMessage('')}
-          >
-            {store.msg}
-          </Alert>
-        ) : null}
+      <>
+        <div
+          className={cx(
+            `${ns}Service`,
+            className,
+            setThemeClassName({
+              ...this.props,
+              name: 'wrapperCustomStyle',
+              id,
+              themeCss: wrapperCustomStyle
+            })
+          )}
+          style={style}
+          {...testIdBuilder?.getTestId()}
+        >
+          {!env.forceSilenceInsideError &&
+          store.error &&
+          showErrorMsg !== false ? (
+            <Alert
+              level="danger"
+              showCloseButton
+              onClose={() => store.updateMessage('')}
+            >
+              {store.msg}
+            </Alert>
+          ) : null}
 
-        {this.renderBody()}
+          {this.renderBody()}
 
-        <Spinner
-          size="lg"
-          overlay
-          key="info"
-          show={store.loading}
-          loadingConfig={loadingConfig}
+          <Spinner
+            size="lg"
+            overlay
+            key="info"
+            show={store.loading}
+            loadingConfig={loadingConfig}
+          />
+
+          {render(
+            // 单独给 feedback 服务的，handleAction 里面先不要处理弹窗
+            'modal',
+            {
+              ...((store.action as ActionObject) &&
+                ((store.action as ActionObject).dialog as object)),
+              type: 'dialog'
+            },
+            {
+              key: 'dialog',
+              data: store.dialogData,
+              onConfirm: this.handleDialogConfirm,
+              onClose: this.handleDialogClose,
+              show: store.dialogOpen
+            }
+          )}
+        </div>
+        <CustomStyle
+          {...this.props}
+          config={{
+            wrapperCustomStyle,
+            id,
+            themeCss: wrapperCustomStyle,
+            classNames: [
+              {
+                key: 'wrapperCustomStyle'
+              }
+            ]
+          }}
+          env={env}
         />
-
-        {render(
-          // 单独给 feedback 服务的，handleAction 里面先不要处理弹窗
-          'modal',
-          {
-            ...((store.action as ActionObject) &&
-              ((store.action as ActionObject).dialog as object)),
-            type: 'dialog'
-          },
-          {
-            key: 'dialog',
-            data: store.dialogData,
-            onConfirm: this.handleDialogConfirm,
-            onClose: this.handleDialogClose,
-            show: store.dialogOpen
-          }
-        )}
-      </div>
+      </>
     );
   }
 }

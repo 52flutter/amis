@@ -359,7 +359,21 @@ export class ServicePlugin extends BasePlugin {
       },
       {
         title: '外观',
-        body: [getSchemaTpl('className')]
+        className: 'p-none',
+        body: [
+          getSchemaTpl('collapseGroup', [
+            {
+              title: '自定义样式',
+              body: [
+                {
+                  type: 'theme-cssCode',
+                  label: false
+                }
+              ]
+            }
+          ]),
+          getSchemaTpl('className')
+        ]
       },
       {
         title: '事件',

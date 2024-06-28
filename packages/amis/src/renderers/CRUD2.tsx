@@ -30,7 +30,8 @@ import {
   isApiOutdated,
   isPureVariable,
   resolveVariableAndFilter,
-  parsePrimitiveQueryString
+  parsePrimitiveQueryString,
+  TableStore2
 } from 'amis-core';
 import {Html, SpinnerExtraProps} from 'amis-ui';
 import {
@@ -48,6 +49,7 @@ import {SchemaCollection} from '../Schema';
 
 import type {Table2RendererEvent} from './Table2';
 import type {CardsRendererEvent} from './Cards';
+import {exportExcel} from './Table/exportExcel';
 
 export type CRUDRendererEvent = Table2RendererEvent | CardsRendererEvent;
 
@@ -1043,6 +1045,45 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
     this.handleQuerySearch(values, true);
   }
 
+  generaExportParams(actionInfo?: any) {
+    const {exportAll, exportName = 'data'} = actionInfo?.args || {};
+    const _tableRender = this.control;
+    const store = _tableRender.props.store;
+    const toolbar = exportAll
+      ? {
+          api: _tableRender?.props?.api,
+          ...(this?.props?.toolbar || {}),
+          ...(_tableRender?.props?.toolbar || {})
+        }
+      : {};
+    store.exportColumns = store.exportColumns || store.columns;
+    const result: any = {
+      ..._tableRender.props,
+      exportName,
+      $$_tableStore: TableStore2,
+      store
+    };
+    return {props: result, toolbar};
+  }
+
+  // 导出excel数据
+  handleExportData(data: any, actionInfo?: any) {
+    const {translate: __} = this.props;
+    const {props, toolbar} = this.generaExportParams(actionInfo);
+    // @TODO 设置导出loading
+    // store.update({exportExcelLoading: true});
+    import('exceljs').then(async (E: any) => {
+      const ExcelJS = E.default || E;
+      try {
+        await exportExcel(ExcelJS, props, toolbar as any);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        // store.update({exportExcelLoading: false});
+      }
+    });
+  }
+
   @autobind
   doAction(action: ActionObject, data: object, throwErrors: boolean = false) {
     if (
@@ -1052,11 +1093,12 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
         'reload',
         'search',
         'startAutoRefresh',
-        'loadMore'
+        'loadMore',
+        'exportData'
       ].includes(action.actionType)
     ) {
       // @ts-ignore
-      return this[`handle${upperFirst(action.actionType)}`](data);
+      return this[`handle${upperFirst(action.actionType)}`](data, action);
     }
   }
 

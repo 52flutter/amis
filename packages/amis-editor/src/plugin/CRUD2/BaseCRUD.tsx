@@ -153,6 +153,34 @@ export class BaseCRUDPlugin extends BasePlugin {
           actionLabel: '停止自动刷新',
           description: '停止自动刷新'
         },
+        {
+          actionType: 'exportData',
+          actionLabel: '导出数据',
+          description: '导出表格数据',
+          schema: getArgsWrapper([
+            {
+              type: 'wrapper',
+              body: [
+                {
+                  name: 'exportAll',
+                  label: '全部数据',
+                  type: 'switch',
+                  variables: '${variables}',
+                  size: 'sm',
+                  mode: 'horizontal'
+                },
+                {
+                  name: 'exportName',
+                  label: '导出文件名',
+                  type: 'input-text',
+                  variables: '${variables}',
+                  size: 'sm',
+                  mode: 'horizontal'
+                }
+              ]
+            }
+          ])
+        },
         ...(actions || [])
       ],
       'actionType'

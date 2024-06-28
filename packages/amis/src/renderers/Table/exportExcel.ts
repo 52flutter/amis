@@ -264,13 +264,15 @@ export async function exportExcel(
     translate: __,
     data,
     prefixRow,
-    affixRow
+    affixRow,
+    exportName = 'data',
+    $$_tableStore = TableStore
   } = props;
   let columns = store.exportColumns || [];
 
   let rows = [];
   let tmpStore;
-  let filename = 'data';
+  let filename = exportName;
   // 支持配置 api 远程获取
   if (typeof toolbar === 'object' && toolbar.api) {
     const pageField = toolbar.pageField || 'page';
@@ -310,7 +312,8 @@ export async function exportExcel(
     }
 
     // 因为很多方法是 store 里的，所以需要构建 store 来处理
-    tmpStore = TableStore.create(getSnapshot(store));
+    // @ts-ignore
+    tmpStore = $$_tableStore.create(getSnapshot(store));
     tmpStore.initRows(rows);
     rows = tmpStore.rows;
   } else {
@@ -364,7 +367,8 @@ export async function exportExcel(
     : columns.filter(column => column?.type !== 'operation');
 
   const firstRowLabels = filteredColumns.map(column => {
-    return filter(column.label, data);
+    // @ts-ignore
+    return filter(column.label || column?.title, data);
   });
 
   // 数据从第二行开始
@@ -378,6 +382,11 @@ export async function exportExcel(
     // 单表头按照原来逻辑
     // 获取sheet第一行作为表头
     const firstRow = worksheet.getRow(1);
+    firstRow.style = {
+      font: {
+        bold: true
+      }
+    };
     // 给表头赋值
     firstRow.values = firstRowLabels;
   }
@@ -421,12 +430,12 @@ export async function exportExcel(
       columIndex += 1;
       const name = column.name!;
       const value = getVariable(rowData, name);
-      if (typeof value === 'undefined' && !column.pristine.tpl) {
+      if (typeof value === 'undefined' && !column?.pristine?.tpl) {
         continue;
       }
       // 处理合并单元格
-      if (name in row.rowSpans) {
-        if (row.rowSpans[name] === 0) {
+      if (name in (row?.rowSpans || {})) {
+        if (!row?.rowSpans?.[name]) {
           continue;
         } else {
           // start row, start column, end row, end column
@@ -439,7 +448,7 @@ export async function exportExcel(
         }
       }
 
-      applyCellStyle(sheetRow, columIndex, column.pristine, rowData);
+      applyCellStyle(sheetRow, columIndex, column?.pristine, rowData);
 
       const type = (column as BaseSchema).type || 'plain';
       // TODO: 这里很多组件都是拷贝对应渲染的逻辑实现的，导致每种都得实现一遍
@@ -807,7 +816,7 @@ export function groupHead(
           }
         }
         const cell = worksheet.getCell(rowIndex, index);
-        cell.value = children[i].label;
+        cell.value = children[i].label || children[i].title;
         const c = children[i];
         const style = c.exportStyle ? c.exportStyle : {};
         if (!style.font) {
@@ -848,7 +857,8 @@ export function groupHead(
 
 // 获取树的深度(表格头高度)
 export function getTreeDepth(treeData: any[]) {
-  if (!Array.isArray(treeData) || treeData.length === 0) {
+  const isTypeArray = treeData instanceof Array || Array.isArray(treeData);
+  if (!isTypeArray || treeData.length === 0) {
     return 0;
   }
   let maxDepth = 1;

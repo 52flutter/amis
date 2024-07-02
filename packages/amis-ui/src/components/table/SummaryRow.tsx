@@ -57,6 +57,9 @@ export class SummaryRow extends React.PureComponent<RowProps> {
     const cells: Array<React.ReactNode> = [];
     const extraCount = isRightExpandable ? 1 : 0;
 
+    const dataFormat =
+      dataSource instanceof Array ? {rows: dataSource} : dataSource;
+
     row?.forEach((s, index) => {
       cells.push(
         <Cell
@@ -73,7 +76,7 @@ export class SummaryRow extends React.PureComponent<RowProps> {
               : s.colSpan
           }
         >
-          {typeof s.render === 'function' ? s.render(dataSource) : s.render}
+          {typeof s.render === 'function' ? s.render(dataFormat) : s.render}
         </Cell>
       );
     });

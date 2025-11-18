@@ -10,19 +10,23 @@ import {
   getTreeAncestors,
   resolveVariableAndFilter,
   labelToString,
-  filter
+  filter,
+  AMISSchemaBase
 } from 'amis-core';
 import {BaseSchema, SchemaObject} from '../Schema';
 import {Tag} from 'amis-ui';
-import {TagSchema} from './Tag';
+import {AMISTagSchema} from './Tag';
 import {createObject} from 'amis-core';
 
 type Words = string | string[];
 /**
  * Words
  */
-export interface WordsSchema extends BaseSchema {
-  type: 'words';
+/**
+ * Tags 用来展示一组标签文字，可以配置展开和收起。
+ */
+export interface AMISWordsSchema extends AMISSchemaBase {
+  type: 'words' | 'tags';
 
   /**
    * 展示限制, 为0时也无限制
@@ -57,7 +61,7 @@ export interface WordsSchema extends BaseSchema {
   /**
    * useTag 当数据是数组时，是否使用tag的方式展示
    */
-  inTag?: boolean | TagSchema;
+  inTag?: boolean | AMISTagSchema;
 
   /**
    * 分割符
@@ -72,7 +76,7 @@ export interface WordsSchema extends BaseSchema {
 
 export interface WordsProps
   extends RendererProps,
-    Omit<WordsSchema, 'type' | 'className'> {}
+    Omit<AMISWordsSchema, 'type' | 'className'> {}
 
 function getLabel(
   item: Option,

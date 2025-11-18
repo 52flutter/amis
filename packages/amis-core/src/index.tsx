@@ -37,6 +37,7 @@ import './renderers/builtin';
 import './renderers/register';
 export * from './utils/index';
 export * from './utils/animations';
+export * from './schema';
 export * from './types';
 export * from './store';
 export * from './globalVar';
@@ -82,8 +83,8 @@ import FormItem, {
   getFormItemByName
 } from './renderers/Item';
 import type {
-  FormBaseControl,
-  FormBaseControlWithoutSize,
+  AMISFormItem,
+  AMISFormItemBase,
   FormControlProps,
   FormItemProps
 } from './renderers/Item';
@@ -95,10 +96,14 @@ import {
 import type {OptionsControlProps} from './renderers/Options';
 import type {
   FormOptionsControl,
-  FormOptionsControlSelf
+  AMISFormItemWithOptions
 } from './renderers/Options';
 import {Schema} from './types';
-import ScopedRootRenderer, {addRootWrapper, RootRenderProps} from './Root';
+import ScopedRootRenderer, {
+  addRootWrapper,
+  RootRenderProps,
+  AMISPartialPropsContext
+} from './Root';
 import {envOverwrite} from './envOverwrite';
 import {EnvContext} from './env';
 import type {RendererEnv} from './env';
@@ -122,7 +127,12 @@ import Overlay from './components/Overlay';
 import PopOver from './components/PopOver';
 import ErrorBoundary from './components/ErrorBoundary';
 import {FormRenderer} from './renderers/Form';
-import type {FormHorizontal, FormSchemaBase} from './renderers/Form';
+import type {
+  FormHorizontal,
+  FormSchemaBase,
+  AMISFormSchema,
+  AMISFormBase
+} from './renderers/Form';
 import {
   enableDebug,
   disableDebug,
@@ -147,6 +157,10 @@ import styleManager from './StyleManager';
 import {bindGlobalEvent, dispatchGlobalEvent} from './utils/renderer-event';
 
 import {getCustomVendor, registerCustomVendor} from './utils/icon';
+import useEnvContext, {EnvContextProvider} from './hooks/useEnvContext';
+import useRenderOptionsContext, {
+  RenderOptionsContextProvider
+} from './hooks/useRenderOptionsContext';
 
 // @ts-ignore
 export const version = '__buildVersion';
@@ -164,6 +178,11 @@ export {
   RenderOptions,
   RendererEnv,
   EnvContext,
+  EnvContextProvider,
+  useEnvContext,
+  RenderOptionsContextProvider,
+  AMISPartialPropsContext,
+  useRenderOptionsContext,
   RegisterStore,
   registerStore,
   FormItem,
@@ -237,10 +256,15 @@ export {
   OptionsControlProps,
   OptionsControlBase,
   FormOptionsControl,
-  FormOptionsControlSelf,
+  AMISFormItemWithOptions as FormOptionsControlSelf,
+  AMISFormItemWithOptions,
   FormControlProps,
-  FormBaseControl,
-  FormBaseControlWithoutSize,
+  AMISFormItem,
+  AMISFormItemBase,
+  AMISFormItem as FormBaseControl,
+  AMISFormItemBase as FormBaseControlWithoutSize,
+  AMISFormSchema,
+  AMISFormBase,
   extendDefaultEnv,
   addRootWrapper,
   RendererConfig,
@@ -277,7 +301,7 @@ export function render(
   pathPrefix: string = ''
 ): JSX.Element {
   return (
-    <AMISRenderer
+    <AMISSchema
       {...props}
       key={key}
       schema={schema}
@@ -287,7 +311,7 @@ export function render(
   );
 }
 
-function AMISRenderer({
+function AMISSchema({
   schema,
   options,
   pathPrefix,
@@ -384,9 +408,16 @@ function AMISRenderer({
     return schema;
   }, [schema, locale, options.replaceText]);
 
+  React.useEffect(() => {
+    env.pageMetaEffect?.(schema.meta || {});
+  }, [schema.meta]);
+
+  const partialProps = React.useContext(AMISPartialPropsContext);
+
   return (
     <EnvContext.Provider value={env}>
       <ScopedRootRenderer
+        {...partialProps}
         {...props}
         schema={schema}
         pathPrefix={pathPrefix}

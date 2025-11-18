@@ -10,6 +10,7 @@ import {
   localeable,
   LocaleProps,
   Schema,
+  filter,
   TestIdBuilder
 } from 'amis-core';
 import Transition, {ENTERED, ENTERING} from 'react-transition-group/Transition';
@@ -19,7 +20,7 @@ import {isObjectShallowModified} from 'amis-core';
 import {autobind, guid} from 'amis-core';
 import {Icon} from './icons';
 import debounce from 'lodash/debounce';
-import {findDOMNode} from 'react-dom';
+import {findDomCompat as findDOMNode} from 'amis-core';
 import TooltipWrapper from './TooltipWrapper';
 import {resizeSensor} from 'amis-core';
 import PopOverContainer from './PopOverContainer';
@@ -613,15 +614,16 @@ export class Tabs extends React.Component<TabsProps, any> {
       tabClassName,
       closable: tabClosable,
       tip,
-      hash
+      hash,
+      data
     } = child.props;
 
     const {editingIndex, editInputText} = this.state;
 
     const activeKey =
       activeKeyProp === undefined && index === 0 ? eventKey : activeKeyProp;
-
-    const iconElement = <Icon cx={cx} icon={icon} className="Icon" />;
+    const iconResult = filter(icon, data);
+    const iconElement = <Icon cx={cx} icon={iconResult} className="Icon" />;
 
     const link = (
       <a title={typeof title === 'string' ? title : undefined}>

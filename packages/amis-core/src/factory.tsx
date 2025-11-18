@@ -31,6 +31,7 @@ import {Placeholder} from './renderers/Placeholder';
 import {StatusScopedProps} from './StatusScoped';
 import type {IScopedContext} from './Scoped';
 import {getPageId} from './utils/getPageId';
+import type {AMISPageMeta, AMISSchemaCollection} from './schema';
 export interface TestFunc {
   (
     path: string,
@@ -426,7 +427,7 @@ export const defaultOptions: RenderOptions = {
   useMobileUI: true, // 是否启用移动端原生 UI
   enableAMISDebug:
     (window as any).enableAMISDebug ??
-    location.search.indexOf('amisDebug=1') !== -1 ??
+    location.search.includes('amisDebug=1') ??
     false,
   loadRenderer: loadRendererError,
   fetcher() {
@@ -557,8 +558,14 @@ export const defaultOptions: RenderOptions = {
    */
   filterHtml: (input: string) => input,
   isMobile: isMobile,
-  getPageId: getPageId
+  getPageId: getPageId,
+  pageMetaEffect: (meta: AMISPageMeta) => {
+    // console.log(meta)
+  }
 };
+
+export const RenderOptionsContext =
+  React.createContext<RenderOptions>(defaultOptions);
 
 export const stores: {
   [propName: string]: IRendererStore;

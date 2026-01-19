@@ -139,7 +139,7 @@ export type InputTextRendererEvent =
   | 'enter';
 
 export interface TextProps extends OptionsControlProps, SpinnerExtraProps {
-  placeholder?: string;
+  placeholder?: string | { [propName: string]: string; };
   addOn?: ActionObject & {
     position?: 'left' | 'right';
     label?: string;
@@ -147,11 +147,11 @@ export interface TextProps extends OptionsControlProps, SpinnerExtraProps {
     className?: string;
   };
   creatable?: boolean;
-  clearable: boolean;
+  clearable?: boolean;
   resetValue?: any;
   autoComplete?: any;
   allowInputText?: boolean;
-  spinnerClassName: string;
+  spinnerClassName?: string;
   revealPassword?: boolean;
   transform?: {
     lowerCase?: boolean; // 用户输入的字符自动转小写
@@ -403,8 +403,13 @@ export default class TextControl extends React.PureComponent<
     if (rendererEvent?.prevented) {
       return;
     }
+    // 修复 placeholder 点击无法聚焦的问题
+    const isClickedOnInput =
+      event.target === this.input ||
+      (this.input?.parentElement?.contains(event.target as HTMLElement) ??
+        false);
 
-    if (multiple || event.target === this.input) {
+    if (multiple || isClickedOnInput) {
       // 已经 focus 的就不重复执行，否则总重新定位光标
       this.state.isFocused || this.focus();
       this.setState({

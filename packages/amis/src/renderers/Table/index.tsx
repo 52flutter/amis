@@ -44,7 +44,8 @@ import {
   getTree,
   resolveVariableAndFilterForAsync,
   getMatchedEventTargets,
-  loopTooMuch
+  loopTooMuch,
+  filterClassNameObject
 } from 'amis-core';
 import {
   Button,
@@ -67,7 +68,7 @@ import {
   SchemaTpl
 } from '../../Schema';
 import {SchemaPopOver} from '../PopOver';
-import {AMISQuickEdit, SchemaQuickEdit} from '../QuickEdit';
+import {AMISQuickEdit, getQuickEditApi, SchemaQuickEdit} from '../QuickEdit';
 import {AMISCopyable, SchemaCopyable} from '../Copyable';
 import {SchemaRemark} from '../Remark';
 import ColumnToggler from './ColumnToggler';
@@ -1282,13 +1283,7 @@ export default class Table<
       return;
     }
 
-    const {
-      onSave,
-      onPristineChange,
-      saveImmediately: propsSaveImmediately,
-      primaryField,
-      onItemChange
-    } = this.props;
+    const {onSave, onPristineChange, primaryField, onItemChange} = this.props;
 
     item.change(values, savePristine);
 
@@ -1319,25 +1314,26 @@ export default class Table<
       item.path
     );
 
-    if (!saveImmediately && !propsSaveImmediately) {
-      return;
-    } else if (saveImmediately && saveImmediately.api) {
-      this.props.onAction(
-        null,
-        {
-          actionType: 'ajax',
-          api: saveImmediately.api,
-          reload: options?.reload
-        },
-        item.locals
-      );
-      return;
-    }
-
     if (!onSave) {
+      const api = getQuickEditApi(saveImmediately);
+
+      if (isEffectiveApi(api)) {
+        // 调用自身的onAction方法
+        this.props.onAction(
+          null,
+          {
+            actionType: 'ajax',
+            api,
+            reload: options?.reload
+          },
+          item.locals
+        );
+      }
+
       return;
     }
 
+    // 调用crud的onSave方法
     onSave(
       item.data,
       difference(item.data, item.pristine, ['id', primaryField]),
@@ -2045,15 +2041,15 @@ export default class Table<
     }
 
     const {key, ...restProps} = props;
+    const columnClassName = filterClassNameObject(
+      column.pristine.className,
+      data
+    );
+    const thClassName = cx(columnClassName, stickyClassName);
 
     if (column.type === '__checkme') {
       return (
-        <th
-          {...restProps}
-          key={key}
-          style={style}
-          className={cx(column.pristine.className, stickyClassName)}
-        >
+        <th {...restProps} key={key} style={style} className={thClassName}>
           {store.rows.length && store.multiple ? (
             <Checkbox
               classPrefix={ns}
@@ -2071,21 +2067,11 @@ export default class Table<
       );
     } else if (column.type === '__dragme') {
       return (
-        <th
-          {...restProps}
-          key={key}
-          style={style}
-          className={cx(column.pristine.className, stickyClassName)}
-        />
+        <th {...restProps} key={key} style={style} className={thClassName} />
       );
     } else if (column.type === '__expandme') {
       return (
-        <th
-          {...restProps}
-          key={key}
-          style={style}
-          className={cx(column.pristine.className, stickyClassName)}
-        >
+        <th {...restProps} key={key} style={style} className={thClassName}>
           {(store.footable &&
             (store.footable.expandAll === false || store.footable.accordion)) ||
           (store.expandConfig &&
@@ -2109,12 +2095,7 @@ export default class Table<
       );
     } else if (column.type === '__index') {
       return (
-        <th
-          {...restProps}
-          key={key}
-          style={style}
-          className={cx(column.pristine.className, stickyClassName)}
-        >
+        <th {...restProps} key={key} style={style} className={thClassName}>
           {__('Table.index')}
 
           {resizable === false ? null : resizeLine}
@@ -2272,7 +2253,7 @@ export default class Table<
           key="content"
           className={cx(
             `TableCell--title`,
-            column.pristine.className,
+            columnClassName,
             column.pristine.labelClassName
           )}
           style={props.style}

@@ -946,7 +946,7 @@ export default class FormTable<
       if (needConfirm === false) {
         this.emitValue();
       }
-
+      this.table?.updateTableInfo?.();
       callback?.();
     });
 
@@ -1937,7 +1937,9 @@ export default class FormTable<
   @autobind
   handlePristineChange(data: Record<string, any>, rowIndex: string) {
     const {needConfirm} = this.props;
-    const indexes = rowIndex.split('.').map(item => parseInt(item, 10));
+    const indexes = this.convertToRawPath(rowIndex)
+      .split('.')
+      .map(item => parseInt(item, 10));
 
     this.setState(
       prevState => {
